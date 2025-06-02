@@ -4,7 +4,8 @@ const PartsList = () => { // Define PartsList component as a function
   const [parts, setParts] = useState([]); // Declare 'parts' state initialized as empty array, with setter 'setParts'
 
   useEffect(() => { // useEffect runs after component mounts
-    fetch('http://localhost:5000/api/parts') // Make GET request to backend API to get parts data
+    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/parts`)
+ // Make GET request to backend API to get parts data
       .then(res => res.json()) // Parse response as JSON
       .then(data => setParts(data)) // Set 'parts' state to the fetched data
       .catch(err => console.error('Error fetching parts:', err)); // Log errors if fetch fails
