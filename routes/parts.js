@@ -99,5 +99,4 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Export the router to use it in server.js
 module.exports = router;
