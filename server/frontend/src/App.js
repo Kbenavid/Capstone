@@ -1,14 +1,38 @@
-import React from 'react'; // Import React to use JSX and create components
-import PartsList from './components/PartsList'; // Import the PartsList component you created
+// src/App.js
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import PartsList    from './components/PartsList';
+import RegisterForm from './components/RegisterForm';
+import LoginForm    from './components/LoginForm';
 
-// Define the main App component as a function
 function App() {
+  // track login in React state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   return (
-    <div className="App"> {/* A container div with className "App" */}
-      <PartsList /> {/* Render the PartsList component inside this container */}
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/register"
+          element={<RegisterForm />}
+        />
+        <Route
+  path="/login"
+  element={<LoginForm onLogin={() => setIsLoggedIn(true)} />}
+/>
+
+        <Route
+          path="/"
+          element={
+            isLoggedIn
+              ? <PartsList />
+              : <Navigate to="/login" replace />
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
-export default App; // Export the App component to be used by ReactDOM in index.js
+export default App;
 

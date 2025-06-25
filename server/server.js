@@ -1,39 +1,42 @@
-require('dotenv').config();
+require('dotenv').config();               // Load .env variables
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const cookieParser = require('cookie-parser'); // To parse & clear JWT cookies
 
 // Import route modules
-const authRoutes = require('./routes/auth');
-const partsRoutes = require('./routes/parts');
-
-const barcodeRoutes = require('./routes/barcodes'); // Import barcode routes
+const authRoutes    = require('./routes/auth');
+const partsRoutes   = require('./routes/parts');
+const barcodeRoutes = require('./routes/barcodes'); // Make sure this file is named `barcode.js`
 
 const app = express();
 
-// Middleware to handle CORS and JSON parsing
-app.use(cors());
-app.use(express.json());
+// ─── MIDDLEWARE ────────────────────────────────────────────────────────────────
+app.use(cors({
+  origin: 'http://localhost:3000',  // your React origin
+  credentials: true,               // <–– allow cookies to be sent
+}));
 
-// Register routes
-app.use('/api/auth', authRoutes);
-app.use('/api/parts', partsRoutes);
+app.use(express.json());                   // Parse JSON bodies
+app.use(cookieParser());                   // Parse cookies for JWT handling
 
-app.use('/api/barcodes', barcodeRoutes); // Register barcode routes
+// ─── ROUTES ────────────────────────────────────────────────────────────────────
+app.use('/api/auth',   authRoutes);       // Register auth endpoints
+app.use('/api/parts',  partsRoutes);      // Register parts CRUD endpoints
+app.use('/api/barcodes', barcodesRoutes);   // Register barcode-gen endpoint
 
-// Connect to MongoDB using connection string from .env
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
-// Root route for simple test
+// Simple root test route
 app.get('/', (req, res) => {
   res.send('Hello from PipeTrack backend!');
 });
 
-// Start server on specified port or default to 5000
+// ─── DATABASE & SERVER START ───────────────────────────────────────────────────
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
