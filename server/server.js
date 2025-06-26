@@ -7,7 +7,8 @@ const cookieParser = require('cookie-parser'); // To parse & clear JWT cookies
 // Import route modules
 const authRoutes    = require('./routes/auth');
 const partsRoutes   = require('./routes/parts');
-const barcodeRoutes = require('./routes/barcodes'); // Make sure this file is named `barcode.js`
+const barcodeRoutes = require('./routes/barcodes'); 
+const jobsRoutes = require('./routes/Jobs');
 
 const app = express();
 
@@ -23,7 +24,9 @@ app.use(cookieParser());                   // Parse cookies for JWT handling
 // ─── ROUTES ────────────────────────────────────────────────────────────────────
 app.use('/api/auth',   authRoutes);       // Register auth endpoints
 app.use('/api/parts',  partsRoutes);      // Register parts CRUD endpoints
-app.use('/api/barcodes', barcodesRoutes);   // Register barcode-gen endpoint
+app.use('/api/barcodes', barcodeRoutes);   // Register barcode-gen endpoint
+app.use('/api/jobs', jobsRoutes);
+// Register job management endpoints
 
 // Simple root test route
 app.get('/', (req, res) => {
