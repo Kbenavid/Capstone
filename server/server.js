@@ -1,45 +1,37 @@
-require('dotenv').config();               // Load .env variables
+// server/server.js
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const cookieParser = require('cookie-parser'); // To parse & clear JWT cookies
+const cookieParser = require('cookie-parser');
 
-// Import route modules
 const authRoutes    = require('./routes/auth');
 const partsRoutes   = require('./routes/parts');
-const barcodeRoutes = require('./routes/barcodes'); 
-const jobsRoutes = require('./routes/Jobs');
+const barcodesRoutes= require('./routes/barcodes');
+const jobsRoutes    = require('./routes/jobs');
 
 const app = express();
 
-// ─── MIDDLEWARE ────────────────────────────────────────────────────────────────
+// Allow your Render frontend and credentials:
 app.use(cors({
-  origin: 'http://localhost:3000',  // your React origin
-  credentials: true,               // <–– allow cookies to be sent
+  origin: 'https://pipetrack.onrender.com',  // your live frontend URL
+  credentials: true,
 }));
+app.use(express.json());
+app.use(cookieParser());
 
-app.use(express.json());                   // Parse JSON bodies
-app.use(cookieParser());                   // Parse cookies for JWT handling
+// Routes
+app.use('/api/auth',    authRoutes);
+app.use('/api/parts',   partsRoutes);
+app.use('/api/barcodes',barcodesRoutes);
+app.use('/api/jobs',    jobsRoutes);
 
-// ─── ROUTES ────────────────────────────────────────────────────────────────────
-app.use('/api/auth',   authRoutes);       // Register auth endpoints
-app.use('/api/parts',  partsRoutes);      // Register parts CRUD endpoints
-app.use('/api/barcodes', barcodeRoutes);   // Register barcode-gen endpoint
-app.use('/api/jobs', jobsRoutes);
-// Register job management endpoints
-
-// Simple root test route
-app.get('/', (req, res) => {
-  res.send('Hello from PipeTrack backend!');
-});
-
-// ─── DATABASE & SERVER START ───────────────────────────────────────────────────
+// DB + start
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch(err => console.error(err));
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
-
