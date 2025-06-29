@@ -1,52 +1,77 @@
 const express = require('express');
-const Job     = require('../models/Job');
-const Part    = require('../models/Part');
-
 const router = express.Router();
+const Job = require('../models/Job');
+const Part = require('../models/Part');
+const jsPDF = require('jspdf');
 
-// GET /api/jobs — list all jobs
-router.get('/', async (req, res) => {
-  try {
-    const jobs = await Job.find()
-      .populate('partsUsed.part', 'name sku') // include part details
-      .sort('-createdAt');
-    res.json(jobs);
-  } catch (err) {
-    console.error('Jobs fetch error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// POST /api/jobs — create a new job
+// @desc    Create a new job and update inventory
+// @route   POST /api/jobs
 router.post('/', async (req, res) => {
   try {
     const { customerName, vanId, partsUsed } = req.body;
-    if (!customerName || !vanId || !Array.isArray(partsUsed) || partsUsed.length === 0) {
-      return res.status(400).json({ message: 'Missing job details or parts' });
+
+    // Update inventory quantities
+    for (const item of partsUsed) {
+      const part = await Part.findById(item.part);
+      if (!part) return res.status(404).json({ message: `Part ${item.part} not found` });
+
+      part.quantity -= item.quantity;
+      await part.save();
     }
 
-    // Build line items and calculate totals
-    let totalCost = 0;
-    const items = await Promise.all(partsUsed.map(async item => {
-      const part = await Part.findById(item.part);
-      if (!part) throw new Error(`Part not found: ${item.part}`);
-      const unitPrice = part.price;
-      const lineTotal = unitPrice * item.quantity;
-      totalCost += lineTotal;
-      return {
-        part: part._id,
-        quantity: item.quantity,
-        unitPrice,
-        lineTotal,
-      };
-    }));
-
-    const job = new Job({ customerName, vanId, partsUsed: items, totalCost });
+    const job = new Job({ customerName, vanId, partsUsed });
     await job.save();
-    res.status(201).json(job);
-  } catch (err) {
-    console.error('Job creation error:', err);
-    res.status(500).json({ message: err.message || 'Server error' });
+
+    res.status(201).json({ message: 'Job recorded', job });
+  } catch (error) {
+    console.error('Job creation error:', error);
+    res.status(500).json({ message: 'Server error while creating job' });
+  }
+});
+
+// @desc    Get all jobs
+// @route   GET /api/jobs
+router.get('/', async (req, res) => {
+  try {
+    const jobs = await Job.find().populate('partsUsed.part');
+    res.json(jobs);
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    res.status(500).json({ message: 'Server error while fetching jobs' });
+  }
+});
+
+// @desc    Generate invoice PDF for a job
+// @route   GET /api/jobs/:id/invoice
+router.get('/:id/invoice', async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id).populate('partsUsed.part');
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Invoice for ${job.customerName}`, 20, 20);
+    doc.text(`Van ID: ${job.vanId}`, 20, 30);
+
+    let y = 50;
+    let total = 0;
+
+    doc.setFontSize(12);
+    job.partsUsed.forEach(item => {
+      const line = `${item.part.name} — ${item.quantity} × $${item.part.price.toFixed(2)} = $${(item.quantity * item.part.price).toFixed(2)}`;
+      total += item.quantity * item.part.price;
+      doc.text(line, 20, y);
+      y += 10;
+    });
+
+    doc.text(`Total: $${total.toFixed(2)}`, 20, y + 10);
+
+    const pdf = doc.output();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.send(Buffer.from(pdf, 'binary'));
+  } catch (error) {
+    console.error('Error generating invoice:', error);
+    res.status(500).json({ message: 'Server error while generating invoice' });
   }
 });
 
