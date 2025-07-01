@@ -1,5 +1,5 @@
 const express = require('express');
-const Job     = require('../models/Job');
+const Job     = require('../models/job');
 const Part    = require('../models/Part');
 
 const router = express.Router();
@@ -7,10 +7,10 @@ const router = express.Router();
 // GET /api/jobs — list all jobs
 router.get('/', async (req, res) => {
   try {
-    const jobs = await Job.find()
+    const Jobs = await Job.find()
       .populate('partsUsed.part', 'name sku') // include part details
       .sort('-createdAt');
-    res.json(jobs);
+    res.json(Jobs);
   } catch (err) {
     console.error('Jobs fetch error:', err);
     res.status(500).json({ message: 'Server error' });
