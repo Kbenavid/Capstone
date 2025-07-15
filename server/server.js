@@ -8,7 +8,7 @@ const cookieParser = require('cookie-parser');
 const authRoutes    = require('./routes/auth');
 const partsRoutes   = require('./routes/parts');
 const barcodeRoutes = require('./routes/barcodes');
-const jobsRoutes    = require('./routes/jobs'); // Make sure this is lowercase
+const jobsRoutes    = require('./routes/jobs');
 
 const app = express();
 
