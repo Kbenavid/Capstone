@@ -4,40 +4,40 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
-// Route imports
+// Import routes
 const authRoutes    = require('./routes/auth');
 const partsRoutes   = require('./routes/parts');
 const barcodeRoutes = require('./routes/barcodes');
-const jobsRoutes    = require('./routes/jobs');
+const jobsRoutes    = require('./routes/jobs'); // Make sure this file is lowercase and matches Git
 
 const app = express();
 
 // ─── MIDDLEWARE ────────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://pipetrack.onrender.com'], // both local + deployed
+  origin: 'https://pipetrack.onrender.com',  // Your deployed frontend
   credentials: true,
 }));
 
-app.use(express.json());       // Parse JSON bodies
-app.use(cookieParser());       // Parse cookies
+app.use(express.json());
+app.use(cookieParser());
 
 // ─── ROUTES ────────────────────────────────────────────────────────────────────
-app.use('/api/auth',    authRoutes);
-app.use('/api/parts',   partsRoutes);
+app.use('/api/auth',     authRoutes);
+app.use('/api/parts',    partsRoutes);
 app.use('/api/barcodes', barcodeRoutes);
-app.use('/api/jobs',    jobsRoutes);
+app.use('/api/jobs',     jobsRoutes);
 
-// ─── ROOT TEST ────────────────────────────────────────────────────────────────
+// ─── TEST ROUTE ────────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
-  res.send('🚀 PipeTrack backend is running!');
+  res.send('🚀 PipeTrack backend is running in production!');
 });
 
 // ─── DATABASE & SERVER START ───────────────────────────────────────────────────
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
