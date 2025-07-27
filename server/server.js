@@ -1,22 +1,20 @@
-require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-const path = require('path');
-
-// ─── ROUTES ─────────────────────────────────────────────────
-const authRoutes    = require('./routes/auth');
-const partsRoutes   = require('./routes/parts');
-const barcodeRoutes = require('./routes/barcodes');
-const jobsRoutes    = require('./routes/jobs');
 
 const app = express();
 
-// ─── CORS FIX FOR DEPLOYED FRONTEND ────────────────────────
+// ─── CORS SETUP ─────────────────────────────────────────────
 app.use(cors({
-  origin: 'https://pipetrack.onrender.com', // your frontend on Render
-  credentials: true, // required to send cookies
+  origin: 'https://pipetrack.onrender.com',
+  credentials: true,
+}));
+
+// Manually handle preflight requests
+app.options('*', cors({
+  origin: 'https://pipetrack.onrender.com',
+  credentials: true,
 }));
 
 // ─── MIDDLEWARE ─────────────────────────────────────────────
@@ -24,6 +22,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 // ─── ROUTES ─────────────────────────────────────────────────
+const authRoutes    = require('./routes/auth');
+const partsRoutes   = require('./routes/parts');
+const barcodeRoutes = require('./routes/barcodes');
+const jobsRoutes    = require('./routes/jobs');
+
 app.use('/api/auth', authRoutes);
 app.use('/api/parts', partsRoutes);
 app.use('/api/barcodes', barcodeRoutes);
