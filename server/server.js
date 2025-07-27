@@ -24,12 +24,12 @@ app.use(cookieParser());
 // ─── ROUTES ─────────────────────────────────────────────────
 const authRoutes    = require('./routes/auth');
 const partsRoutes   = require('./routes/parts');
-const barcodeRoutes = require('./routes/barcodes');
+const barcodesRoutes = require('./routes/barcodes');
 const jobsRoutes    = require('./routes/jobs');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/parts', partsRoutes);
-app.use('/api/barcodes', barcodeRoutes);
+app.use('/api/barcodes', barcodesRoutes);
 app.use('/api/jobs', jobsRoutes);
 
 // ─── ROOT TEST ROUTE ────────────────────────────────────────
