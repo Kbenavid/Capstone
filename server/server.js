@@ -3,36 +3,38 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 
-// Import routes
+// ─── ROUTES ─────────────────────────────────────────────────
 const authRoutes    = require('./routes/auth');
 const partsRoutes   = require('./routes/parts');
 const barcodeRoutes = require('./routes/barcodes');
-const jobsRoutes    = require('./routes/jobs'); // Make sure this file is lowercase and matches Git
+const jobsRoutes    = require('./routes/jobs');
 
 const app = express();
 
-// ─── MIDDLEWARE ────────────────────────────────────────────────────────────────
+// ─── CORS FIX FOR DEPLOYED FRONTEND ────────────────────────
 app.use(cors({
-  origin: 'https://pipetrack.onrender.com',  // Your deployed frontend
-  credentials: true,
+  origin: 'https://pipetrack.onrender.com', // your frontend on Render
+  credentials: true, // required to send cookies
 }));
 
+// ─── MIDDLEWARE ─────────────────────────────────────────────
 app.use(express.json());
 app.use(cookieParser());
 
-// ─── ROUTES ────────────────────────────────────────────────────────────────────
-app.use('/api/auth',     authRoutes);
-app.use('/api/parts',    partsRoutes);
+// ─── ROUTES ─────────────────────────────────────────────────
+app.use('/api/auth', authRoutes);
+app.use('/api/parts', partsRoutes);
 app.use('/api/barcodes', barcodeRoutes);
-app.use('/api/jobs',     jobsRoutes);
+app.use('/api/jobs', jobsRoutes);
 
-// ─── TEST ROUTE ────────────────────────────────────────────────────────────────
+// ─── ROOT TEST ROUTE ────────────────────────────────────────
 app.get('/', (req, res) => {
   res.send('🚀 PipeTrack backend is running in production!');
 });
 
-// ─── DATABASE & SERVER START ───────────────────────────────────────────────────
+// ─── DATABASE & SERVER START ────────────────────────────────
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
