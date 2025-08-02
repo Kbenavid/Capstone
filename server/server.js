@@ -6,6 +6,8 @@ require('dotenv').config();
 
 const app = express();
 
+app.set('trust proxy', 1); // Required for Render + Secure Cookies
+
 // ─── MIDDLEWARE ─────────────────────────────────────────────
 app.use(express.json());
 app.use(cookieParser());
