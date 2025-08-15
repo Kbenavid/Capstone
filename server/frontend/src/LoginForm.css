@@ -1,0 +1,19 @@
+.login-wrap {
+    width: min(760px, 92%);
+    margin: var(--space-6) auto;
+  }
+  
+  .login-card {
+    background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-1);
+  }
+  
+  .login-title {
+    font-size: var(--fs-4);
+    text-align: center;
+    margin-bottom: var(--space-4);
+  }
+  
