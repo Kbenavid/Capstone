@@ -1,3 +1,4 @@
+import "./RegisterForm.css";
 import React, { useState } from 'react';              // React core and state hook
 import { useNavigate }        from 'react-router-dom'; // Hook to programmatically navigate
 

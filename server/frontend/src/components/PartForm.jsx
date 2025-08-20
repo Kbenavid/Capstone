@@ -1,3 +1,4 @@
+import "./PartForm.css";
 import React, { useState } from 'react';
 
 export default function PartForm({ onCreated }) {

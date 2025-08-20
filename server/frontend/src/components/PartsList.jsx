@@ -1,3 +1,4 @@
+import "./PartsList.css";
 import React, { useEffect, useState } from 'react';
 import PartForm     from './PartForm';
 import PartEditForm from './PartEditForm';

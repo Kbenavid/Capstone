@@ -1,0 +1,40 @@
+.form {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .form-row {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .label {
+    font-size: var(--fs-1);
+    color: var(--muted);
+    margin-bottom: var(--space-1);
+  }
+  .input, input[type="text"], input[type="password"], input[type="number"], input[type="date"], select, textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    outline: none;
+    transition: box-shadow .2s ease, border-color .2s ease;
+  }
+  .input:focus, input:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
+  }
+  .help {
+    color: var(--muted);
+    font-size: var(--fs-1);
+    margin-top: var(--space-1);
+  }
+  .error-box {
+    border: 1px solid #ef444433;
+    background: #3b0a0a10;
+    color: #b91c1c;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+  }
+  

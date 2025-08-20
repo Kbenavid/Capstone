@@ -1,0 +1,10 @@
+.part-form-wrap {
+    width: min(600px, 92%);
+    margin: var(--space-6) auto;
+  }
+  
+  .part-form-title {
+    font-size: var(--fs-4);
+    margin-bottom: var(--space-4);
+  }
+  
