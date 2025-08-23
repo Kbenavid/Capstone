@@ -1,61 +1,69 @@
-import React, { useState } from 'react';
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  Link,
-} from 'react-router-dom';
+// src/App.js
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-import PartsList    from './components/PartsList';
+import NavBar from './components/NavBar';
+import PartsList from './components/PartsList';
 import RegisterForm from './components/RegisterForm';
-import LoginForm    from './components/LoginForm';
-import JobForm      from './components/JobForm';
-import JobsList     from './components/JobsList';
-import LogoutButton from './components/LogoutButton';
+import LoginForm from './components/LoginForm';
+import JobForm from './components/JobForm';
+import JobsList from './components/JobsList';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false); // avoid flicker
+  const API = process.env.REACT_APP_API_BASE_URL;
+
+  // Wire to /api/auth/me to persist login across refresh
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
+        if (!cancelled) setIsLoggedIn(res.ok);
+      } catch (_) {
+        if (!cancelled) setIsLoggedIn(false);
+      } finally {
+        if (!cancelled) setAuthChecked(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [API]);
+
+  async function handleLogout() {
+    try {
+      await fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+    } catch (_) {
+      // ignore network hiccups
+    } finally {
+      setIsLoggedIn(false);
+      window.location.href = '/login';
+    }
+  }
+
+  if (!authChecked) return null; // or show a tiny loader
 
   return (
     <BrowserRouter>
-      {/* Mobile-first nav: column on xs, row on sm+ */}
-      {isLoggedIn && (
-        <nav className="p-4 bg-gray-100 flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
-          <Link
-            to="/"
-            className="text-blue-600 hover:underline"
-          >
-            Inventory
-          </Link>
-          <Link
-            to="/jobs"
-            className="text-blue-600 hover:underline"
-          >
-            Jobs
-          </Link>
-          <LogoutButton onLogout={() => setIsLoggedIn(false)} />
-        </nav>
-      )}
+      {isLoggedIn && <NavBar onLogout={handleLogout} />}
 
       <Routes>
         {/* Public */}
         <Route path="/register" element={<RegisterForm />} />
         <Route
           path="/login"
-          element={<LoginForm onLogin={() => setIsLoggedIn(true)} />}
+          element={
+            <LoginForm onLogin={() => {
+              setIsLoggedIn(true);
+              window.location.href = '/';
+            }} />
+          }
         />
 
         {/* Inventory */}
         <Route
           path="/"
-          element={
-            isLoggedIn ? (
-              <PartsList />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
+          element={isLoggedIn ? <PartsList /> : <Navigate to="/login" replace />}
         />
 
         {/* Jobs */}
@@ -63,7 +71,7 @@ function App() {
           path="/jobs"
           element={
             isLoggedIn ? (
-              <div className="max-w-4xl mx-auto p-4">
+              <div className="container">
                 <JobForm onCreated={() => window.location.reload()} />
                 <JobsList />
               </div>
@@ -72,6 +80,9 @@ function App() {
             )
           }
         />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to={isLoggedIn ? '/' : '/login'} replace />} />
       </Routes>
     </BrowserRouter>
   );
