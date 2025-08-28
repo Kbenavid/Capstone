@@ -1,55 +1,49 @@
 const express = require('express');
-const Part    = require('../models/Part');
-const router  = express.Router();
+const Part = require('../models/part'); 
+const router = express.Router();
 
-// ─── List all parts ─────────────────────────────────────────────────────────────
-router.get('/', async (req, res) => {
+// Create a part
+router.post('/', async (req, res, next) => {
   try {
-    const parts = await Part.find().sort('name');
-    res.json(parts);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+    const { name, sku, quantity = 0, price = 0, restockThreshold = 0 } = req.body || {};
 
-// ─── Create a new part ──────────────────────────────────────────────────────────
-router.post('/', async (req, res) => {
-  try {
-    const { name, sku, quantity, price, restockThreshold } = req.body;
-    if (await Part.findOne({ sku })) {
-      return res.status(400).json({ message: 'SKU already exists' });
+    // Basic validation
+    if (!name || !sku) {
+      return res.status(400).json({ message: 'name and sku are required' });
     }
-    const part = new Part({ name, sku, quantity, price, restockThreshold });
-    await part.save();
-    res.status(201).json(part);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+
+    // Cast numbers (frontends often send strings)
+    const payload = {
+      name: String(name).trim(),
+      sku: String(sku).trim(),
+      quantity: Number(quantity) || 0,
+      price: Number(price) || 0,
+      restockThreshold: Number(restockThreshold) || 0,
+    };
+
+    const part = await Part.create(payload);
+    return res.status(201).json(part);
+  } catch (err) {
+    // Duplicate key (e.g., unique SKU)
+    if (err && err.code === 11000) {
+      return res.status(409).json({ message: 'SKU already exists' });
+    }
+    // Mongoose validation errors
+    if (err?.name === 'ValidationError') {
+      return res.status(400).json({ message: err.message });
+    }
+    console.error('Create part error:', err); // ⬅️ will show in Render logs
+    return next(err); // let global handler format as 500
   }
 });
 
-// ─── Update part by ID ──────────────────────────────────────────────────────────
-router.put('/:id', async (req, res) => {
+// (Optional) list parts — keep your existing GET if you already have one
+router.get('/', async (req, res, next) => {
   try {
-    const part = await Part.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!part) return res.status(404).json({ message: 'Part not found' });
-    res.json(part);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// ─── Delete part by ID ──────────────────────────────────────────────────────────
-router.delete('/:id', async (req, res) => {
-  try {
-    const part = await Part.findByIdAndDelete(req.params.id);
-    if (!part) return res.status(404).json({ message: 'Part not found' });
-    res.json({ message: 'Part deleted' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    const parts = await Part.find().sort({ createdAt: -1 });
+    res.json(parts);
+  } catch (err) {
+    next(err);
   }
 });
 

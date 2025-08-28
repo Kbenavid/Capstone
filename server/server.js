@@ -30,6 +30,11 @@ app.use('/api/parts', partsRoutes);
 app.use('/api/barcodes', barcodesRoutes);
 app.use('/api/jobs', jobsRoutes);
 
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ message: 'Server error' });
+});
+
 // ─── ROOT ROUTE ─────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.send('🚀 PipeTrack backend is running in production!');
