@@ -1,98 +1,138 @@
+// src/components/PartForm.jsx
+import React, { useState } from "react";
 import "./PartForm.css";
-import React, { useState } from 'react';
 
 export default function PartForm({ onCreated }) {
-  const [name, setName]               = useState('');
-  const [sku, setSku]                 = useState('');
-  const [quantity, setQuantity]       = useState(0);
-  const [price, setPrice]             = useState(0);
-  const [restockThreshold, setRestock] = useState(0);
-  const [error, setError]             = useState('');
+  const [form, setForm] = useState({
+    name: "",
+    sku: "",
+    quantity: "",
+    price: "",
+    restockThreshold: "",
+  });
+  const [error, setError] = useState("");
+
+  const API = process.env.REACT_APP_API_BASE_URL;
+
+  function onChange(e) {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError('');
+    setError("");
 
-    const res = await fetch(
-      `${process.env.REACT_APP_API_BASE_URL}/api/parts`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',           // include auth cookie
-        body: JSON.stringify({ name, sku, quantity, price, restockThreshold }),
-      }
-    );
+    const payload = {
+      name: form.name.trim(),
+      sku: form.sku.trim(),
+      quantity: Number(form.quantity) || 0,
+      price: Number(form.price) || 0,
+      restockThreshold: Number(form.restockThreshold) || 0,
+    };
 
-    const data = await res.json();
-    if (res.ok) {
-      onCreated(data);                   // tell parent a new part was created
-      // reset form
-      setName(''); setSku(''); setQuantity(0);
-      setPrice(0); setRestock(0);
-    } else {
-      setError(data.message || 'Failed to create part');
+    try {
+      const res = await fetch(`${API}/api/parts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      let data = {};
+      try { data = await res.json(); } catch {}
+
+      if (!res.ok) throw new Error(data.message || `Create failed (${res.status})`);
+
+      onCreated?.(data);
+      setForm({ name: "", sku: "", quantity: "", price: "", restockThreshold: "" });
+    } catch (err) {
+      setError(err.message || "Server error");
+      console.error("Create part error:", err);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded">
-      <h3 className="text-xl mb-2">Add New Part</h3>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
+    <div className="part-form-wrap card">
+      <h3 className="part-form-title">Add New Part</h3>
+      {error && <div className="error-box">{error}</div>}
 
-      <label className="block mb-2">
-        Name
-        <input
-          value={name}
-          onChange={e => setName(e.target.value)}
-          className="w-full border p-1 rounded"
-          required
-        />
-      </label>
+      <form className="form part-form" onSubmit={handleSubmit} noValidate>
+        <div className="form-row">
+          <label className="label" htmlFor="name">Name</label>
+          <input
+            id="name"
+            name="name"
+            className="input"
+            value={form.name}
+            onChange={onChange}
+            required
+            autoComplete="off"
+          />
+        </div>
 
-      <label className="block mb-2">
-        SKU
-        <input
-          value={sku}
-          onChange={e => setSku(e.target.value)}
-          className="w-full border p-1 rounded"
-          required
-        />
-      </label>
+        <div className="form-row">
+          <label className="label" htmlFor="sku">SKU</label>
+          <input
+            id="sku"
+            name="sku"
+            className="input"
+            value={form.sku}
+            onChange={onChange}
+            required
+            autoComplete="off"
+          />
+        </div>
 
-      <label className="block mb-2">
-        Quantity
-        <input
-          type="number"
-          value={quantity}
-          onChange={e => setQuantity(+e.target.value)}
-          className="w-full border p-1 rounded"
-        />
-      </label>
+        <div className="form-row">
+          <label className="label" htmlFor="quantity">Quantity</label>
+          <input
+            id="quantity"
+            name="quantity"
+            className="input"
+            type="number"
+            min="0"
+            step="1"
+            value={form.quantity}
+            onChange={onChange}
+            autoComplete="off"
+          />
+        </div>
 
-      <label className="block mb-2">
-        Price
-        <input
-          type="number"
-          step="0.01"
-          value={price}
-          onChange={e => setPrice(+e.target.value)}
-          className="w-full border p-1 rounded"
-        />
-      </label>
+        <div className="form-row">
+          <label className="label" htmlFor="price">Price</label>
+          <input
+            id="price"
+            name="price"
+            className="input"
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.price}
+            onChange={onChange}
+            autoComplete="off"
+          />
+        </div>
 
-      <label className="block mb-4">
-        Restock Threshold
-        <input
-          type="number"
-          value={restockThreshold}
-          onChange={e => setRestock(+e.target.value)}
-          className="w-full border p-1 rounded"
-        />
-      </label>
+        <div className="form-row">
+          <label className="label" htmlFor="restockThreshold">Restock Threshold</label>
+          <input
+            id="restockThreshold"
+            name="restockThreshold"
+            className="input"
+            type="number"
+            min="0"
+            step="1"
+            value={form.restockThreshold}
+            onChange={onChange}
+            autoComplete="off"
+          />
+        </div>
 
-      <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded">
-        Add Part
-      </button>
-    </form>
+        <div className="actions">
+          <button type="submit" className="btn btn-primary">Add Part</button>
+        </div>
+      </form>
+    </div>
   );
 }
