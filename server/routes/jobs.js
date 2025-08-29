@@ -1,8 +1,8 @@
 const express = require('express');
-const Job     = require('../models/Job');
-const Part    = require('../models/Part');
-
+const Job  = require('../models/Job');   
+const Part = require('../models/part');  
 const router = express.Router();
+
 
 // GET /api/jobs — list all jobs
 router.get('/', async (req, res) => {
