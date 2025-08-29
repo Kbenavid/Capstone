@@ -5,6 +5,22 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
+const fs = require('fs');
+const path = require('path');
+
+
+try {
+const mdir = path.join(__dirname, 'models');
+const rdir = path.join(__dirname, 'routes');
+console.log('[BOOT] cwd =', process.cwd());
+console.log('[BOOT] __dirname =', __dirname);
+console.log('[BOOT] server/models exists?', fs.existsSync(mdir));
+if (fs.existsSync(mdir)) console.log('[BOOT] server/models list:', fs.readdirSync(mdir));
+console.log('[BOOT] server/routes exists?', fs.existsSync(rdir));
+if (fs.existsSync(rdir)) console.log('[BOOT] server/routes list:', fs.readdirSync(rdir));
+} catch (e) {
+console.log('[BOOT] dir check error:', e);
+}
 
 app.set('trust proxy', 1); // Required for Render + Secure Cookies
 
