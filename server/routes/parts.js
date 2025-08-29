@@ -1,5 +1,5 @@
 const express = require('express');
-const Part = require('../models/part'); 
+const part = require('../models/part'); 
 const router = express.Router();
 
 // Create a part
