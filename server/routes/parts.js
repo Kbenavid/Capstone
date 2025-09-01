@@ -1,6 +1,8 @@
 const express = require('express');
 const Part = require('../models/part');
 const { nextPartBarcode } = require('../utils/barcode');
+const bc = typeof barcode === 'string' ? barcode.trim() : '';
+payload.barcode = bc || (await nextPartBarcode());
 const router = express.Router();
 
 // Create a part
@@ -23,6 +25,8 @@ router.post('/', async (req, res, next) => {
     const bc = typeof barcode === 'string' ? barcode.trim() : '';
     payload.barcode = bc || (await nextPartBarcode());
 
+    console.log('[parts.create] about to save:', payload);
+ 
     const created = await Part.create(payload);
     return res.status(201).json(created);
   } catch (err) {
