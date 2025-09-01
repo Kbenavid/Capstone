@@ -1,0 +1,16 @@
+const Counter = require('../models/Counter');
+
+function formatBarcode(n) {
+  return `PT${String(n).padStart(6, '0')}`; // e.g., PT000001
+}
+
+async function nextPartBarcode() {
+  const doc = await Counter.findOneAndUpdate(
+    { _id: 'parts_barcode' },
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true }
+  );
+  return formatBarcode(doc.seq);
+}
+
+module.exports = { nextPartBarcode, formatBarcode };
