@@ -1,127 +1,133 @@
-import "./PartsList.css";
 import React, { useEffect, useState } from 'react';
-import PartForm     from './PartForm';
+import './PartsList.css';
+import PartForm from './PartForm';
 import PartEditForm from './PartEditForm';
 
 export default function PartsList() {
-  const [parts, setParts]                 = useState([]);
+  const API = process.env.REACT_APP_API_BASE_URL;
+  const [parts, setParts] = useState([]);
   const [editingPartId, setEditingPartId] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // Load parts on mount and after any change
-  useEffect(() => {
-    fetchParts();
-  }, []);
-
-  async function fetchParts() {
-    try {
-      const res = await fetch(
-        `${process.env.REACT_APP_API_BASE_URL}/api/parts`,
-        { credentials: 'include' }
-      );
-      if (!res.ok) throw new Error(`Fetch failed (${res.status})`);
-      const data = await res.json();
-      setParts(data);
-      setEditingPartId(null);
-    } catch (err) {
-      console.error('Failed to load parts:', err);
-    }
-  }
+  useEffect(function () {
+    var cancelled = false;
+    (async function load() {
+      try {
+        const res = await fetch(API + '/api/parts', { credentials: 'include' });
+        const data = await res.json();
+        if (!res.ok) throw new Error((data && data.message) || ('Fetch failed (' + res.status + ')'));
+        if (!Array.isArray(data)) throw new Error('Invalid response');
+        if (!cancelled) {
+          setParts(data);
+          setEditingPartId(null);
+          setError('');
+        }
+      } catch (e) {
+        if (!cancelled) setError(e && e.message ? e.message : 'Failed to load parts');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return function () { cancelled = true; };
+  }, [API]);
 
   async function handleDelete(id) {
     if (!window.confirm('Really delete this part?')) return;
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_API_BASE_URL}/api/parts/${id}`,
-        { method: 'DELETE', credentials: 'include' }
-      );
-      if (!res.ok) throw new Error(`Delete failed (${res.status})`);
-      fetchParts();
-    } catch (err) {
-      console.error('Failed to delete part:', err);
-      alert('Could not delete part—check console for details.');
+      const res = await fetch(API + '/api/parts/' + id, { method: 'DELETE', credentials: 'include' });
+      if (res.status !== 204) {
+        const txt = await res.text();
+        throw new Error('Delete failed (' + res.status + '): ' + txt);
+      }
+      setParts(function (list) { return list.filter(function (p) { return p._id !== id; }); });
+    } catch (e) {
+      alert(e && e.message ? e.message : 'Could not delete part');
     }
   }
 
+  function Price({ value }) {
+    var num = Number(value);
+    if (!isFinite(num)) num = 0;
+    return <>{'$' + num.toFixed(2)}</>;
+  }
+
+  if (loading) return <div className="container">Loading…</div>;
+  if (error) return <div className="container error-box">{error}</div>;
+
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      {/* CREATE */}
-      <PartForm onCreated={fetchParts} />
+    <div className="container">
+      <PartForm onCreated={function () { setLoading(true); setTimeout(fetchParts, 0); }} />
 
-      <h2 className="text-2xl mb-4">Parts Inventory</h2>
+      <h2 className="h2">Parts Inventory</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {parts.length === 0 ? (
-          <p>No parts found.</p>
-        ) : (
-          parts.map(part => {
-            const lowStock = part.quantity < part.restockThreshold;
+      <table className="parts-table" aria-label="Parts inventory">
+        <tbody>
+          {parts.map(function (part) {
+            var qty = Number(part && part.quantity ? part.quantity : 0);
+            var rest = Number(part && part.restockThreshold ? part.restockThreshold : 0);
+            var lowStock = qty < rest;
+            var cardClass = 'part-card' + (lowStock ? ' low' : '');
 
             return (
-              <div
-                key={part._id}
-                className={`
-                  p-4 rounded border
-                  ${lowStock
-                    ? 'border-red-500 bg-red-50'
-                    : 'border-gray-200 bg-white'}
-                `}
-              >
-                {editingPartId === part._id ? (
-                  // EDIT MODE
-                  <PartEditForm
-                    part={part}
-                    onCancel={() => setEditingPartId(null)}
-                    onUpdated={fetchParts}
-                  />
-                ) : (
-                  // VIEW MODE
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
-                    <div className="flex items-center space-x-4">
-                      {/* Barcode */}
-                      <img
-                        src={`${process.env.REACT_APP_API_BASE_URL}/api/barcodes/${encodeURIComponent(
-                          part.sku
-                        )}`}
-                        alt={`Barcode for ${part.sku}`}
-                        className="w-24 h-auto"
+              <tr key={part._id}>
+                <td>
+                  <div className={cardClass}>
+                    {editingPartId === part._id ? (
+                      <PartEditForm
+                        part={part}
+                        onCancel={function () { setEditingPartId(null); }}
+                        onUpdated={fetchParts}
                       />
-                      {/* Details + restock badge */}
-                      <div>
-                        <strong>{part.name}</strong> — SKU: {part.sku}
-                        <br />
-                        Qty: {part.quantity}, Price: ${part.price.toFixed(2)}
-                        <br />
-                        Restock at: {part.restockThreshold}
-                        {lowStock && (
-                          <span className="inline-block ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded">
-                            Restock Needed
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    ) : (
+                      <div className="card-grid">
+                        <div className="meta">
+                          <div className="thumb">
+                            <img
+                              src={API + '/api/barcodes/' + encodeURIComponent(part.sku)}
+                              alt={'Barcode for ' + part.sku}
+                            />
+                          </div>
+                          <div className="text">
+                            <h4 className="name">{part.name}</h4>
+                            <div className="sku">SKU: {part.sku}</div>
+                            <div className="qty">Qty: {qty}</div>
+                            {part.barcode ? <div className="barcode">Barcode: {part.barcode}</div> : null}
+                          </div>
+                        </div>
 
-                    {/* Actions */}
-                    <div className="mt-4 sm:mt-0 space-x-2">
-                      <button
-                        onClick={() => setEditingPartId(part._id)}
-                        className="px-3 py-1 bg-yellow-500 text-white rounded"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(part._id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                        <div className="stat">
+                          <div className="label">Price</div>
+                          <div className="value"><Price value={part.price} /></div>
+                        </div>
+
+                        <div className="stat">
+                          <div className="label">Restock at</div>
+                          <div className="value">{rest}</div>
+                        </div>
+
+                        <div className="actions">
+                          {lowStock ? <span className="badge-danger">Restock</span> : null}
+                          <button className="btn" onClick={function () { setEditingPartId(part._id); }}>Edit</button>
+                          <button className="btn btn-danger" onClick={function () { handleDelete(part._id); }}>Delete</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </td>
+              </tr>
             );
-          })
-        )}
-      </div>
+          })}
+
+          {parts.length === 0 ? (
+            <tr>
+              <td>
+                <div className="empty">No parts yet.</div>
+              </td>
+            </tr>
+          ) : null}
+        </tbody>
+      </table>
     </div>
   );
 }
