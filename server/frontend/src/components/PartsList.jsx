@@ -10,46 +10,43 @@ export default function PartsList() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Single source of truth for loading parts
   const reloadParts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(API + '/api/parts', { credentials: 'include' });
+      const res = await fetch(`${API}/api/parts`, { credentials: 'include' });
       const data = await res.json();
-      if (!res.ok) throw new Error((data && data.message) || ('Fetch failed (' + res.status + ')'));
+      if (!res.ok) throw new Error((data && data.message) || `Fetch failed (${res.status})`);
       if (!Array.isArray(data)) throw new Error('Invalid response');
       setParts(data);
       setEditingPartId(null);
       setError('');
     } catch (e) {
-      setError(e && e.message ? e.message : 'Failed to load parts');
+      setError((e && e.message) || 'Failed to load parts');
     } finally {
       setLoading(false);
     }
   }, [API]);
 
-  useEffect(function () {
-    reloadParts();
-  }, [reloadParts]);
+  useEffect(() => { reloadParts(); }, [reloadParts]);
 
   async function handleDelete(id) {
     if (!window.confirm('Really delete this part?')) return;
     try {
-      const res = await fetch(API + '/api/parts/' + id, { method: 'DELETE', credentials: 'include' });
+      const res = await fetch(`${API}/api/parts/${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.status !== 204) {
         const txt = await res.text();
-        throw new Error('Delete failed (' + res.status + '): ' + txt);
+        throw new Error(`Delete failed (${res.status}): ${txt}`);
       }
-      setParts(function (list) { return list.filter(function (p) { return p._id !== id; }); });
+      setParts(list => list.filter(p => p._id !== id));
     } catch (e) {
-      alert(e && e.message ? e.message : 'Could not delete part');
+      alert((e && e.message) || 'Could not delete part');
     }
   }
 
   function Price({ value }) {
-    var num = Number(value);
-    if (!isFinite(num)) num = 0;
-    return <>{'$' + num.toFixed(2)}</>;
+    const n = Number(value);
+    const safe = Number.isFinite(n) ? n : 0;
+    return <>{`$${safe.toFixed(2)}`}</>;
   }
 
   if (loading) return <div className="container">Loading…</div>;
@@ -57,18 +54,17 @@ export default function PartsList() {
 
   return (
     <div className="container">
-      {/* CREATE */}
       <PartForm onCreated={reloadParts} />
 
       <h2 className="h2">Parts Inventory</h2>
 
       <table className="parts-table" aria-label="Parts inventory">
         <tbody>
-          {parts.map(function (part) {
-            var qty = Number(part && part.quantity ? part.quantity : 0);
-            var rest = Number(part && part.restockThreshold ? part.restockThreshold : 0);
-            var lowStock = qty < rest;
-            var cardClass = 'part-card' + (lowStock ? ' low' : '');
+          {parts.map(part => {
+            const qty = Number(part && part.quantity ? part.quantity : 0);
+            const rest = Number(part && part.restockThreshold ? part.restockThreshold : 0);
+            const lowStock = qty < rest;
+            const cardClass = `part-card${lowStock ? ' low' : ''}`;
 
             return (
               <tr key={part._id}>
@@ -77,24 +73,16 @@ export default function PartsList() {
                     {editingPartId === part._id ? (
                       <PartEditForm
                         part={part}
-                        onCancel={function () { setEditingPartId(null); }}
+                        onCancel={() => setEditingPartId(null)}
                         onUpdated={reloadParts}
                       />
                     ) : (
-                      <div className="card-grid">
-                        <div className="meta">
-                          <div className="thumb">
-                            <img
-                              src={API + '/api/barcodes/' + encodeURIComponent(part.sku)}
-                              alt={'Barcode for ' + part.sku}
-                            />
-                          </div>
-                          <div className="text">
-                            <h4 className="name">{part.name}</h4>
-                            <div className="sku">SKU: {part.sku}</div>
-                            <div className="qty">Qty: {qty}</div>
-                            {part.barcode ? <div className="barcode">Barcode: {part.barcode}</div> : null}
-                          </div>
+                      <div className="card-grid no-thumb">
+                        <div className="meta-only">
+                          <h4 className="name">{part.name}</h4>
+                          <div className="sku">SKU: {part.sku}</div>
+                          <div className="qty">Qty: {qty}</div>
+                          {part.barcode ? <div className="barcode">Barcode: {part.barcode}</div> : null}
                         </div>
 
                         <div className="stat">
@@ -109,8 +97,8 @@ export default function PartsList() {
 
                         <div className="actions">
                           {lowStock ? <span className="badge-danger">Restock</span> : null}
-                          <button className="btn" onClick={function () { setEditingPartId(part._id); }}>Edit</button>
-                          <button className="btn btn-danger" onClick={function () { handleDelete(part._id); }}>Delete</button>
+                          <button className="btn" onClick={() => setEditingPartId(part._id)}>Edit</button>
+                          <button className="btn btn-danger" onClick={() => handleDelete(part._id)}>Delete</button>
                         </div>
                       </div>
                     )}
