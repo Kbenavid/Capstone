@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './PartsList.css';
 import PartForm from './PartForm';
 import PartEditForm from './PartEditForm';
@@ -10,27 +10,27 @@ export default function PartsList() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(function () {
-    var cancelled = false;
-    (async function load() {
-      try {
-        const res = await fetch(API + '/api/parts', { credentials: 'include' });
-        const data = await res.json();
-        if (!res.ok) throw new Error((data && data.message) || ('Fetch failed (' + res.status + ')'));
-        if (!Array.isArray(data)) throw new Error('Invalid response');
-        if (!cancelled) {
-          setParts(data);
-          setEditingPartId(null);
-          setError('');
-        }
-      } catch (e) {
-        if (!cancelled) setError(e && e.message ? e.message : 'Failed to load parts');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return function () { cancelled = true; };
+  // Single source of truth for loading parts
+  const reloadParts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(API + '/api/parts', { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error((data && data.message) || ('Fetch failed (' + res.status + ')'));
+      if (!Array.isArray(data)) throw new Error('Invalid response');
+      setParts(data);
+      setEditingPartId(null);
+      setError('');
+    } catch (e) {
+      setError(e && e.message ? e.message : 'Failed to load parts');
+    } finally {
+      setLoading(false);
+    }
   }, [API]);
+
+  useEffect(function () {
+    reloadParts();
+  }, [reloadParts]);
 
   async function handleDelete(id) {
     if (!window.confirm('Really delete this part?')) return;
@@ -57,7 +57,8 @@ export default function PartsList() {
 
   return (
     <div className="container">
-      <PartForm onCreated={function () { setLoading(true); setTimeout(fetchParts, 0); }} />
+      {/* CREATE */}
+      <PartForm onCreated={reloadParts} />
 
       <h2 className="h2">Parts Inventory</h2>
 
@@ -77,7 +78,7 @@ export default function PartsList() {
                       <PartEditForm
                         part={part}
                         onCancel={function () { setEditingPartId(null); }}
-                        onUpdated={fetchParts}
+                        onUpdated={reloadParts}
                       />
                     ) : (
                       <div className="card-grid">
