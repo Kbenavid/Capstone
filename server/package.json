@@ -1,14 +1,15 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
+  "main": "server.js",
   "license": "ISC",
-  "description": "",
+  "description": "PipeTrack backend",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "bwip-js": "^4.6.0",
@@ -18,5 +19,8 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.15.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
