@@ -1,8 +1,7 @@
 // server/frontend/src/JobsList.jsx
 import React, { useEffect, useState } from "react";
-import "./JobsList.css"; // keep any of your existing styles
+import "./JobsList.css";
 
-// CRA env: set REACT_APP_API_BASE_URL=https://<backend>/api
 const API_BASE = process.env.REACT_APP_API_BASE_URL || "";
 
 export default function JobsList() {
@@ -15,7 +14,6 @@ export default function JobsList() {
       try {
         setLoading(true);
         setErr("");
-        // NOTE: base already ends with /api → don’t add another /api here
         const r = await fetch(`${API_BASE}/jobs`, { credentials: "include" });
         if (!r.ok) throw new Error(`Failed to load jobs (${r.status})`);
         const data = await r.json();
@@ -37,11 +35,11 @@ export default function JobsList() {
 
         <div className="card-body">
           {loading ? (
-            <p style={{ margin: 0, color: "#6b7280" }}>Loading…</p>
+            <p className="muted" style={{ margin: 0 }}>Loading…</p>
           ) : err ? (
             <p style={{ margin: 0, color: "#b91c1c" }}>Error: {err}</p>
           ) : jobs.length === 0 ? (
-            <p style={{ margin: 0, color: "#6b7280" }}>No jobs recorded.</p>
+            <p className="muted" style={{ margin: 0 }}>No jobs recorded.</p>
           ) : (
             <div
               className="grid"
@@ -72,13 +70,13 @@ export default function JobsList() {
                       </h2>
                       <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                         <div style={{ fontWeight: 600 }}>Total: ${total}</div>
-                        <div style={{ fontSize: 12, color: "#6b7280" }}>
+                        <div className="muted" style={{ fontSize: 12 }}>
                           Van: {van}
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ fontSize: 13, color: "#374151", marginBottom: 8 }}>
+                    <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
                       {when ? when.toLocaleString() : "-"}
                     </div>
 
