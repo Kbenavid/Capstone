@@ -3,49 +3,55 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { createResetToken, hashToken } = require('../utils/resetToken');
 
-// Env
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const APP_URL = process.env.APP_URL || 'http://localhost:5173';
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 
-// Cookie options for Render/HTTPS
+// Cookie options (Render requires secure + SameSite=None)
 const cookieOpts = {
   httpOnly: true,
-  secure: true,      // Render is HTTPS
-  sameSite: 'None',  // cross-site from frontend -> backend
+  secure: true,
+  sameSite: 'None',
   path: '/',
 };
 
-// ---------- Helpers ----------
+// ----------------- Helpers -----------------
 function issueJwt(user) {
   const payload = { sub: user._id.toString(), tv: user.tokenVersion || 0 };
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 }
 
 function setAuthCookie(res, token) {
-  res.cookie('token', token, COOKIE_DOMAIN ? { ...cookieOpts, domain: COOKIE_DOMAIN } : cookieOpts);
+  res.cookie(
+    'token',
+    token,
+    COOKIE_DOMAIN ? { ...cookieOpts, domain: COOKIE_DOMAIN } : cookieOpts
+  );
 }
 
-// ---------- Controllers ----------
+// ----------------- Controllers -----------------
 
 // POST /api/auth/register
 exports.register = async (req, res) => {
   try {
     let { email, password, username } = req.body || {};
     if (!email || !password) {
-      return res.status(400).json({ ok: false, error: 'Email and password are required.' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Email and password are required.' });
     }
     email = String(email).toLowerCase().trim();
     if (username) username = String(username).trim();
 
     const exists = await User.findOne({ email });
-    if (exists) return res.status(409).json({ ok: false, error: 'Email already in use.' });
+    if (exists)
+      return res.status(409).json({ ok: false, error: 'Email already in use.' });
 
     const user = new User({ email, username: username || undefined });
     await user.setPassword(password);
     await user.save();
 
-    // Auto-login on register (optional; keeps UX smooth)
+    // Auto-login after register
     const token = issueJwt(user);
     setAuthCookie(res, token);
 
@@ -60,24 +66,33 @@ exports.register = async (req, res) => {
 };
 
 // POST /api/auth/login
-// Body: { identifier: "<email or username>", password: "<pw>" }
+// Accepts { identifier, password } or { email, password } or { username, password }
 exports.login = async (req, res) => {
   try {
-    const { identifier, password } = req.body || {};
-    if (!identifier || !password) {
-      return res.status(400).json({ ok: false, error: 'Missing credentials' });
+    let { identifier, email, username, password } = req.body || {};
+    if (!password)
+      return res.status(400).json({ ok: false, error: 'Missing password' });
+
+    const rawId = identifier || email || username;
+    if (!rawId)
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Missing email or username' });
+
+    let query;
+    if (String(rawId).includes('@')) {
+      query = { email: String(rawId).toLowerCase().trim() };
+    } else {
+      query = { username: String(rawId).trim() };
     }
 
-    const isEmail = String(identifier).includes('@');
-    const query = isEmail
-      ? { email: String(identifier).toLowerCase().trim() }
-      : { username: String(identifier).trim() };
-
     const user = await User.findOne(query);
-    if (!user) return res.status(401).json({ ok: false, error: 'Invalid credentials' });
+    if (!user)
+      return res.status(401).json({ ok: false, error: 'Invalid credentials' });
 
     const valid = await user.validatePassword(password);
-    if (!valid) return res.status(401).json({ ok: false, error: 'Invalid credentials' });
+    if (!valid)
+      return res.status(401).json({ ok: false, error: 'Invalid credentials' });
 
     const token = issueJwt(user);
     setAuthCookie(res, token);
@@ -95,7 +110,9 @@ exports.login = async (req, res) => {
 // POST /api/auth/logout
 exports.logout = async (req, res) => {
   try {
-    const opts = COOKIE_DOMAIN ? { ...cookieOpts, domain: COOKIE_DOMAIN } : cookieOpts;
+    const opts = COOKIE_DOMAIN
+      ? { ...cookieOpts, domain: COOKIE_DOMAIN }
+      : cookieOpts;
     res.clearCookie('token', opts);
     return res.json({ ok: true });
   } catch (err) {
@@ -107,7 +124,8 @@ exports.logout = async (req, res) => {
 // GET /api/auth/me (protected with requireAuth)
 exports.me = async (req, res) => {
   const { _id, email, username } = req.user || {};
-  if (!_id) return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  if (!_id)
+    return res.status(401).json({ ok: false, error: 'Unauthorized' });
   return res.json({ ok: true, user: { id: _id, email, username } });
 };
 
@@ -115,9 +133,11 @@ exports.me = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body || {};
-    const user = email ? await User.findOne({ email: String(email).toLowerCase().trim() }) : null;
+    const user = email
+      ? await User.findOne({ email: String(email).toLowerCase().trim() })
+      : null;
 
-    // Always respond 200 to avoid email enumeration
+    // Always return 200 to avoid email enumeration
     if (user) {
       const { raw, hash, expiresAt } = createResetToken();
       user.resetPasswordTokenHash = hash;
@@ -136,10 +156,13 @@ exports.forgotPassword = async (req, res) => {
         });
       }
 
-      // In non-demo mode, send resetUrl via email provider
+      // In real mode, send resetUrl via email provider
     }
 
-    return res.json({ ok: true, message: 'If this email exists, a reset link was generated.' });
+    return res.json({
+      ok: true,
+      message: 'If this email exists, a reset link was generated.',
+    });
   } catch (err) {
     console.error('forgotPassword error:', err);
     return res.status(500).json({ ok: false, error: 'Server error' });
@@ -152,7 +175,9 @@ exports.resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body || {};
     if (!token || !newPassword) {
-      return res.status(400).json({ ok: false, error: 'Missing token or newPassword' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Missing token or newPassword' });
     }
 
     const tokenHash = hashToken(token);
@@ -162,7 +187,9 @@ exports.resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ ok: false, error: 'Invalid or expired token' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Invalid or expired token' });
     }
 
     await user.setPassword(newPassword);
@@ -171,7 +198,10 @@ exports.resetPassword = async (req, res) => {
     user.tokenVersion = (user.tokenVersion || 0) + 1; // invalidate existing JWTs
     await user.save();
 
-    return res.json({ ok: true, message: 'Password updated. You can log in now.' });
+    return res.json({
+      ok: true,
+      message: 'Password updated. You can log in now.',
+    });
   } catch (err) {
     console.error('resetPassword error:', err);
     return res.status(500).json({ ok: false, error: 'Server error' });
