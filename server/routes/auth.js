@@ -1,12 +1,16 @@
 const express = require('express');
+const ctrl = require('../controllers/authController');
+
 const router = express.Router();
-const { register, login, logout, me } = require('../controllers/authController');
 
+// Existing auth endpoints (keep your real ones if already implemented)
+router.post('/register', ctrl.register);
+router.post('/login', ctrl.login);
+router.post('/logout', ctrl.logout);
+router.get('/me', ctrl.me);
 
-router.post('/register', register);
-router.post('/login', login);
-router.post('/logout', logout);
-router.get('/me', me);
-
+// Forgot/reset endpoints
+router.post('/forgot', ctrl.forgotPassword);
+router.post('/reset', ctrl.resetPassword);
 
 module.exports = router;

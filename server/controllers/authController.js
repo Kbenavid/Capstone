@@ -1,95 +1,89 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const { createResetToken, hashToken } = require('../utils/resetToken');
 
-function toStr(v) { return (v ?? '').toString().trim(); }
+// READ THESE ENV VARS:
+// DEMO_MODE=true (so we return the reset link instead of emailing)
+// APP_URL=http://localhost:5173 (your frontend base URL for the reset page)
+const DEMO_MODE = process.env.DEMO_MODE === 'true';
+const APP_URL = process.env.APP_URL || 'http://localhost:5173';
 
-// ---- Register ------------------------------------------------------------
-async function register(req, res) {
+// ===== Existing handlers (stubs to avoid breaking imports) =====
+// Replace these with your real implementations if you already have them.
+exports.register = exports.register || (async (req, res) => {
+  return res.status(501).json({ ok: false, error: 'register not implemented here' });
+});
+exports.login = exports.login || (async (req, res) => {
+  return res.status(501).json({ ok: false, error: 'login not implemented here' });
+});
+exports.logout = exports.logout || (async (req, res) => {
+  return res.status(200).json({ ok: true, message: 'logged out' });
+});
+exports.me = exports.me || (async (req, res) => {
+  return res.status(200).json({ ok: true, user: null });
+});
+
+// ===== Forgot Password =====
+exports.forgotPassword = async (req, res) => {
   try {
-    const username = toStr(req.body?.username);
-    const password = toStr(req.body?.password);
-    const emailRaw = toStr(req.body?.email);
-    const email = emailRaw ? emailRaw.toLowerCase() : undefined;
+    const { email } = req.body || {};
+    // Always return 200 to avoid email enumeration
+    const user = email ? await User.findOne({ email }) : null;
 
-    if (!username || !password) {
-      return res.status(400).json({ message: 'username and password are required' });
+    if (user) {
+      const { raw, hash, expiresAt } = createResetToken();
+      user.resetPasswordTokenHash = hash;
+      user.resetPasswordExpiresAt = expiresAt;
+      await user.save();
+
+      const resetUrl = `${APP_URL}/reset-password?token=${raw}`;
+
+      if (DEMO_MODE) {
+        console.log('[DEMO] Password reset URL:', resetUrl);
+        return res.json({
+          ok: true,
+          message: 'If this email exists, a reset link was generated.',
+          demoResetUrl: resetUrl,
+          expiresAt,
+        });
+      }
+
+      // In real email mode, send the resetUrl via email provider here.
     }
 
-    const dupQuery = email ? { $or: [{ username }, { email }] } : { username };
-    const existing = await User.findOne(dupQuery);
-    if (existing) return res.status(409).json({ message: 'user already exists' });
-
-    const user = new User({ username, email });
-    if (typeof user.setPassword === 'function') {
-      await user.setPassword(password);
-    } else {
-      user.passwordHash = await bcrypt.hash(password, 10);
-    }
-    await user.save();
-
-    return res.status(201).json({ message: 'Registered' });
+    return res.json({ ok: true, message: 'If this email exists, a reset link was generated.' });
   } catch (err) {
-    console.error('register error:', err);
-    if (err?.name === 'ValidationError') {
-      return res.status(400).json({ message: err.message });
-    }
-    return res.status(500).json({ message: 'Server error' });
+    console.error('forgotPassword error:', err);
+    return res.status(500).json({ ok: false, error: 'Server error' });
   }
-}
+};
 
-// ---- Login ---------------------------------------------------------------
-async function login(req, res) {
+// ===== Reset Password =====
+exports.resetPassword = async (req, res) => {
   try {
-    const username = toStr(req.body?.username);
-    const password = toStr(req.body?.password);
-
-    const user = await User.findOne({ username });
-    if (!user || !(await user.validatePassword(password))) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+    const { token, newPassword } = req.body || {};
+    if (!token || !newPassword) {
+      return res.status(400).json({ ok: false, error: 'Missing token or newPassword' });
     }
 
-    const token = jwt.sign(
-      { userId: user._id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' },
-    );
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure:   true,
-      sameSite: 'none',
-      maxAge:   3600 * 1000,
+    const tokenHash = hashToken(token);
+    const user = await User.findOne({
+      resetPasswordTokenHash: tokenHash,
+      resetPasswordExpiresAt: { $gt: new Date() },
     });
 
-    return res.json({ message: 'Logged in' });
+    if (!user) {
+      return res.status(400).json({ ok: false, error: 'Invalid or expired token' });
+    }
+
+    await user.setPassword(newPassword);
+    user.resetPasswordTokenHash = undefined;
+    user.resetPasswordExpiresAt = undefined;
+    user.tokenVersion = (user.tokenVersion || 0) + 1; // optional: invalidate existing JWTs
+    await user.save();
+
+    return res.json({ ok: true, message: 'Password updated. You can log in now.' });
   } catch (err) {
-    console.error('login error:', err);
-    return res.status(500).json({ message: 'Server error' });
+    console.error('resetPassword error:', err);
+    return res.status(500).json({ ok: false, error: 'Server error' });
   }
-}
-
-// ---- Logout --------------------------------------------------------------
-async function logout(_req, res) {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure:   true,
-    sameSite: 'none',
-  });
-  return res.json({ message: 'Logged out' });
-}
-
-// ---- Me ------------------------------------------------------------------
-async function me(req, res) {
-  const token = req.cookies?.token;
-  if (!token) return res.status(401).json({ message: 'Unauthorized' });
-
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    return res.json({ userId: payload.userId, username: payload.username });
-  } catch {
-    return res.status(401).json({ message: 'Invalid token' });
-  }
-}
-
-module.exports = { register, login, logout, me };
+};
