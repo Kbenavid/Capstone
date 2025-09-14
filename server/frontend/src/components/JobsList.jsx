@@ -1,53 +1,113 @@
-import "./JobsList.css";
-import React, { useEffect, useState } from 'react';
+// server/frontend/src/JobsList.jsx
+import React, { useEffect, useState } from "react";
+import "./JobsList.css"; // keep any of your existing styles
+
+// CRA env: set REACT_APP_API_BASE_URL=https://<backend>/api
+const API_BASE = process.env.REACT_APP_API_BASE_URL || "";
 
 export default function JobsList() {
   const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/jobs`, {
-      credentials: 'include',
-    })
-      .then(r => r.json())
-      .then(setJobs)
-      .catch(console.error);
+    (async () => {
+      try {
+        setLoading(true);
+        setErr("");
+        // NOTE: base already ends with /api → don’t add another /api here
+        const r = await fetch(`${API_BASE}/jobs`, { credentials: "include" });
+        if (!r.ok) throw new Error(`Failed to load jobs (${r.status})`);
+        const data = await r.json();
+        setJobs(Array.isArray(data) ? data : data.jobs || []);
+      } catch (e) {
+        setErr(e.message || "Failed to load jobs");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   return (
-    <div className="p-4">
-      <h3 className="text-2xl mb-4">Past Jobs</h3>
+    <div className="page">
+      <div className="card">
+        <div className="card-header">
+          <h1 className="card-title">Past Jobs</h1>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {jobs.length === 0 ? (
-          <p>No jobs recorded.</p>
-        ) : (
-          jobs.map(job => (
+        <div className="card-body">
+          {loading ? (
+            <p style={{ margin: 0, color: "#6b7280" }}>Loading…</p>
+          ) : err ? (
+            <p style={{ margin: 0, color: "#b91c1c" }}>Error: {err}</p>
+          ) : jobs.length === 0 ? (
+            <p style={{ margin: 0, color: "#6b7280" }}>No jobs recorded.</p>
+          ) : (
             <div
-              key={job._id}
-              className="p-4 rounded border border-gray-200 bg-white"
+              className="grid"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: 16,
+              }}
             >
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-                <div>
-                  <strong>{job.customerName}</strong> (Van: {job.vanId})
-                  <br />
-                  {new Date(job.jobDate).toLocaleString()}
-                </div>
-                <div className="mt-2 sm:mt-0 text-right font-semibold">
-                  Total: ${job.totalCost.toFixed(2)}
-                </div>
-              </div>
+              {jobs.map((job) => {
+                const customer = job.customerName || "Unknown customer";
+                const van = job.vanId ?? "-";
+                const when = job.jobDate ? new Date(job.jobDate) : null;
+                const total =
+                  typeof job.totalCost === "number"
+                    ? job.totalCost.toFixed(2)
+                    : "0.00";
+                const lines = Array.isArray(job.partsUsed) ? job.partsUsed : [];
 
-              <ul className="mt-2 space-y-1">
-                {job.partsUsed.map((line, i) => (
-                  <li key={i} className="text-sm">
-                    {line.quantity} × {line.part.name} @ $
-                    {line.unitPrice.toFixed(2)} = ${line.lineTotal.toFixed(2)}
-                  </li>
-                ))}
-              </ul>
+                return (
+                  <div key={job._id} className="card">
+                    <div
+                      className="card-header"
+                      style={{ marginBottom: 8, alignItems: "flex-start" }}
+                    >
+                      <h2 className="card-title" style={{ fontSize: 16 }}>
+                        {customer}
+                      </h2>
+                      <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                        <div style={{ fontWeight: 600 }}>Total: ${total}</div>
+                        <div style={{ fontSize: 12, color: "#6b7280" }}>
+                          Van: {van}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: 13, color: "#374151", marginBottom: 8 }}>
+                      {when ? when.toLocaleString() : "-"}
+                    </div>
+
+                    <ul style={{ margin: 0, paddingLeft: 16 }}>
+                      {lines.map((line, i) => {
+                        const qty = line?.quantity ?? 0;
+                        const name = line?.part?.name ?? "—";
+                        const unit =
+                          typeof line?.unitPrice === "number"
+                            ? line.unitPrice.toFixed(2)
+                            : "0.00";
+                        const lineTotal =
+                          typeof line?.lineTotal === "number"
+                            ? line.lineTotal.toFixed(2)
+                            : (qty * (line?.unitPrice || 0)).toFixed(2);
+
+                        return (
+                          <li key={i} style={{ fontSize: 13, marginBottom: 4 }}>
+                            {qty} × {name} @ ${unit} = ${lineTotal}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                );
+              })}
             </div>
-          ))
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

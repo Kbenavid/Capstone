@@ -42,3 +42,66 @@
     margin: var(--space-6) auto;
   }
   
+  /* --- Card layout (shared) --- */
+.page {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;          /* light gray */
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(0,0,0,.06);
+  padding: 16px;
+}
+
+.card + .card {
+  margin-top: 16px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 600;
+  margin: 0;
+}
+
+.card-body {
+  overflow: auto; /* nice for tables */
+}
+
+/* optional toolbar row */
+.card-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+/* keep tables visually aligned inside cards */
+.card .table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.card .table th,
+.card .table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.card .table th {
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+}
