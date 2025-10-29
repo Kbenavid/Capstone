@@ -32,7 +32,7 @@ export default function PartForm({ onCreated }) {
     };
 
     try {
-      const res = await fetch(`${API}/api/parts`, {
+      const res = await fetch(`${API}/parts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

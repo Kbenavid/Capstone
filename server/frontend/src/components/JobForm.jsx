@@ -1,4 +1,3 @@
-// server/frontend/src/JobForm.jsx
 import "./JobForm.css";
 import React, { useEffect, useState } from "react";
 

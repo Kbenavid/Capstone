@@ -13,7 +13,7 @@ export default function PartsList() {
   const reloadParts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/parts`, { credentials: 'include' });
+      const res = await fetch(`${API}/parts`, { credentials: 'include' });
       const data = await res.json();
       if (!res.ok) throw new Error((data && data.message) || `Fetch failed (${res.status})`);
       if (!Array.isArray(data)) throw new Error('Invalid response');
@@ -32,7 +32,7 @@ export default function PartsList() {
   async function handleDelete(id) {
     if (!window.confirm('Really delete this part?')) return;
     try {
-      const res = await fetch(`${API}/api/parts/${id}`, { method: 'DELETE', credentials: 'include' });
+      const res = await fetch(`${API}/parts/${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.status !== 204) {
         const txt = await res.text();
         throw new Error(`Delete failed (${res.status}): ${txt}`);
