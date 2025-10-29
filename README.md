@@ -70,8 +70,8 @@ Stretch Features
 ---
 
 Live Demo
-Deployed backend available at:  
-https://pipetrack-backend.onrender.com
+Frontend:  https://pipetrack.onrender.com
+Backend: https://pipe-track-backend.onrender.com
 
 ---
 
