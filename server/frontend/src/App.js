@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
@@ -14,12 +13,13 @@ function App() {
   const [authChecked, setAuthChecked] = useState(false); // avoid flicker
   const API = process.env.REACT_APP_API_BASE_URL;
 
-  // Wire to /api/auth/me to persist login across refresh
+  // ✅ Persist login across refresh
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${API}/api/auth/me`, { credentials: 'include' });
+        // FIXED: removed double /api
+        const res = await fetch(`${API}/auth/me`, { credentials: 'include' });
         if (!cancelled) setIsLoggedIn(res.ok);
       } catch (_) {
         if (!cancelled) setIsLoggedIn(false);
@@ -27,12 +27,19 @@ function App() {
         if (!cancelled) setAuthChecked(true);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [API]);
 
+  // ✅ Logout handler
   async function handleLogout() {
     try {
-      await fetch(`${API}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+      // FIXED: removed double /api
+      await fetch(`${API}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
     } catch (_) {
       // ignore network hiccups
     } finally {
@@ -41,32 +48,34 @@ function App() {
     }
   }
 
-  if (!authChecked) return null; // or show a tiny loader
+  if (!authChecked) return null; // or a tiny loading spinner
 
   return (
     <BrowserRouter>
       {isLoggedIn && <NavBar onLogout={handleLogout} />}
 
       <Routes>
-        {/* Public */}
+        {/* Public Routes */}
         <Route path="/register" element={<RegisterForm />} />
         <Route
           path="/login"
           element={
-            <LoginForm onLogin={() => {
-              setIsLoggedIn(true);
-              window.location.href = '/';
-            }} />
+            <LoginForm
+              onLogin={() => {
+                setIsLoggedIn(true);
+                window.location.href = '/';
+              }}
+            />
           }
         />
 
-        {/* Inventory */}
+        {/* Inventory (Protected) */}
         <Route
           path="/"
           element={isLoggedIn ? <PartsList /> : <Navigate to="/login" replace />}
         />
 
-        {/* Jobs */}
+        {/* Jobs (Protected) */}
         <Route
           path="/jobs"
           element={
@@ -82,7 +91,10 @@ function App() {
         />
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to={isLoggedIn ? '/' : '/login'} replace />} />
+        <Route
+          path="*"
+          element={<Navigate to={isLoggedIn ? '/' : '/login'} replace />}
+        />
       </Routes>
     </BrowserRouter>
   );
