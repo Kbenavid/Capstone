@@ -15,7 +15,7 @@ export default function LoginForm({ onLogin }) {
 
     try {
       const res = await fetch(
-        `${API_BASE}/api/auth/login`,
+        `${API_BASE}/auth/login`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
