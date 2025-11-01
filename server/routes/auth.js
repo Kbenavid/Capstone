@@ -1,17 +1,33 @@
-const express = require('express');
-const ctrl = require('../controllers/authController');
-const requireAuth = require('../middlewares/requireAuth'); // <-- this path is correct from routes/
+const express = require("express");
+const ctrl = require("../controllers/authController");
+const requireAuth = require("../middlewares/requireAuth");
 
 const router = express.Router();
 
-router.post('/register', ctrl.register);
-router.post('/login', ctrl.login);
-router.post('/logout', ctrl.logout);
+// ✅ Register route — temporary debug version
+router.post("/register", async (req, res) => {
+  console.log("Register request body:", req.body); // Log the incoming data
 
-// Protect /me so it returns 401 when not logged in
-router.get('/me', requireAuth, ctrl.me);
+  try {
+    const { username, password } = req.body;
 
-router.post('/forgot', ctrl.forgotPassword);
-router.post('/reset', ctrl.resetPassword);
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    // Call your controller to handle actual registration
+    await ctrl.register(req, res);
+  } catch (err) {
+    console.error("Register route error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ✅ Other routes stay the same
+router.post("/login", ctrl.login);
+router.post("/logout", ctrl.logout);
+router.get("/me", requireAuth, ctrl.me);
+router.post("/forgot", ctrl.forgotPassword);
+router.post("/reset", ctrl.resetPassword);
 
 module.exports = router;

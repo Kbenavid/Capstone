@@ -7,7 +7,11 @@ const userSchema = new mongoose.Schema(
     username: { type: String, trim: true, unique: true, sparse: true },
 
     // Email-based login (recommended for forgot-password)
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    email: {
+      type: String,
+      required: false,
+      index: { unique: true, sparse: true },
+    },
 
     passwordHash: { type: String, required: true },
 

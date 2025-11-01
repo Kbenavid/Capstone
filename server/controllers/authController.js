@@ -7,12 +7,14 @@ const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const APP_URL = process.env.APP_URL || 'http://localhost:5173';
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 
-// Cookie options (Render requires secure + SameSite=None)
+// Use secure cookies only in production (Render uses HTTPS)
+const isProd = process.env.NODE_ENV === "production";
+
 const cookieOpts = {
   httpOnly: true,
-  secure: true,
-  sameSite: 'None',
-  path: '/',
+  secure: isProd,                  // false for localhost (allows HTTP)
+  sameSite: isProd ? "None" : "Lax",  // Lax works on localhost, None for cross-domain
+  path: "/",
 };
 
 // ----------------- Helpers -----------------
@@ -22,11 +24,7 @@ function issueJwt(user) {
 }
 
 function setAuthCookie(res, token) {
-  res.cookie(
-    'token',
-    token,
-    COOKIE_DOMAIN ? { ...cookieOpts, domain: COOKIE_DOMAIN } : cookieOpts
-  );
+  res.cookie("token", token, cookieOpts);
 }
 
 // ----------------- Controllers -----------------
@@ -34,37 +32,44 @@ function setAuthCookie(res, token) {
 // POST /api/auth/register
 exports.register = async (req, res) => {
   try {
-    let { email, password, username } = req.body || {};
-    if (!email || !password) {
+    let { username, password } = req.body || {};
+    console.log('🟢 Incoming register data:', req.body);
+
+    if (!username || !password) {
+      console.log('❌ Missing fields');
       return res
         .status(400)
-        .json({ ok: false, error: 'Email and password are required.' });
+        .json({ ok: false, error: 'Username and password are required.' });
     }
-    email = String(email).toLowerCase().trim();
-    if (username) username = String(username).trim();
 
-    const exists = await User.findOne({ email });
-    if (exists)
-      return res.status(409).json({ ok: false, error: 'Email already in use.' });
+    username = String(username).trim().toLowerCase();
 
-    const user = new User({ email, username: username || undefined });
+    const exists = await User.findOne({ username });
+    if (exists) {
+      console.log('⚠️ Username already exists:', username);
+      return res
+        .status(409)
+        .json({ ok: false, error: 'Username already in use.' });
+    }
+
+    console.log('➡️ Creating new user document');
+    const user = new User({ username });
     await user.setPassword(password);
+
+    console.log('➡️ Saving new user to MongoDB');
     await user.save();
 
-    // Auto-login after register
-    const token = issueJwt(user);
-    setAuthCookie(res, token);
-
+    console.log('✅ Registered new user:', user.username);
     return res.status(201).json({
       ok: true,
-      user: { id: user._id, email: user.email, username: user.username || null },
+      message: 'User registered successfully',
+      user: { id: user._id, username: user.username },
     });
   } catch (err) {
-    console.error('register error:', err);
-    return res.status(500).json({ ok: false, error: 'Server error' });
+    console.error('❌ register error (detailed):', err);
+    return res.status(500).json({ ok: false, error: err.message || 'Server error' });
   }
 };
-
 // POST /api/auth/login
 // Accepts { identifier, password } or { email, password } or { username, password }
 exports.login = async (req, res) => {

@@ -1,11 +1,11 @@
 "use client";
 import PrivateRoute from "@/components/PrivateRoute";
-import VanCard from "@/components/VanCard";
+import PartsList from "@/components/PartsList";
 
 export default function Page() {
   return (
     <PrivateRoute>
-      <VanCard />
+      <PartsList />
     </PrivateRoute>
   );
 }

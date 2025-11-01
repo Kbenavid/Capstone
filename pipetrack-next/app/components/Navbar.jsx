@@ -1,21 +1,25 @@
+"use client";
 import React from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import styles from "./NavBar.module.css";
+import LogoutButton from "./LogoutButton"; // ✅ add this
 
+export default function NavBar() {
+  return (
+    <nav className={styles.navbar}>
+      <div className={styles.navbarInner}>
+        <div className={styles.brand}>PipeTrack</div>
 
-export default function NavBar({ onLogout }) {
-return (
-<nav className="navbar">
-<div className="navbar-inner">
-<div className="brand">PipeTrack</div>
-<div className="nav-links">
-<Link to="/" className="nav-btn">Inventory</Link>
-<Link to="/jobs" className="nav-btn">Jobs</Link>
-</div>
-<div className="nav-actions">
-<button className="btn" onClick={onLogout}>Logout</button>
-</div>
-</div>
-</nav>
-);
+        <div className={styles.navLinks}>
+          <Link href="/" className={styles.navBtn}>Home</Link>
+          <Link href="/inventory" className={styles.navBtn}>Inventory</Link>
+          <Link href="/jobs" className={styles.navBtn}>Jobs</Link>
+        </div>
+
+        <div className={styles.navActions}>
+          <LogoutButton /> {/* ✅ Use the real component */}
+        </div>
+      </div>
+    </nav>
+  );
 }

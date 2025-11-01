@@ -1,34 +1,30 @@
-.part-form-wrap {
+.partFormWrap {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-5);
   box-shadow: var(--shadow-1);
   margin-bottom: var(--space-5);
-  }
-  
-  
-  .part-form-title {
+}
+
+.partFormTitle {
   font-size: var(--fs-3);
   margin: 0 0 var(--space-3);
-  }
-  
-  
-  .part-form {
+}
+
+.partForm {
   display: grid;
   gap: var(--space-4);
-  }
-  
-  
-  .part-form .form-row {
+}
+
+.formRow {
   display: grid;
   gap: var(--space-2);
-  }
-  
-  
-  .part-form .actions {
+}
+
+.actions {
   margin-top: var(--space-3);
   display: flex;
   gap: var(--space-2);
   justify-content: flex-end;
-  }
+}

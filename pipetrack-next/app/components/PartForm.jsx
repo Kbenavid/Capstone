@@ -1,4 +1,4 @@
-// src/components/PartForm.jsx
+"use client";
 import React, { useState } from "react";
 import styles from "./PartForm.module.css";
 
@@ -12,7 +12,7 @@ export default function PartForm({ onCreated }) {
   });
   const [error, setError] = useState("");
 
-  const API = process.env.REACT_APP_API_BASE_URL;
+  const API = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   function onChange(e) {
     const { name, value } = e.target;
@@ -40,12 +40,21 @@ export default function PartForm({ onCreated }) {
       });
 
       let data = {};
-      try { data = await res.json(); } catch {}
+      try {
+        data = await res.json();
+      } catch {}
 
-      if (!res.ok) throw new Error(data.message || `Create failed (${res.status})`);
+      if (!res.ok)
+        throw new Error(data.message || `Create failed (${res.status})`);
 
       onCreated?.(data);
-      setForm({ name: "", sku: "", quantity: "", price: "", restockThreshold: "" });
+      setForm({
+        name: "",
+        sku: "",
+        quantity: "",
+        price: "",
+        restockThreshold: "",
+      });
     } catch (err) {
       setError(err.message || "Server error");
       console.error("Create part error:", err);
@@ -53,17 +62,23 @@ export default function PartForm({ onCreated }) {
   }
 
   return (
-    <div className="part-form-wrap card">
-      <h3 className="part-form-title">Add New Part</h3>
-      {error && <div className="error-box">{error}</div>}
+    <div className={styles.partFormWrap}>
+      <h3 className={styles.partFormTitle}>Add New Part</h3>
 
-      <form className="form part-form" onSubmit={handleSubmit} noValidate>
-        <div className="form-row">
-          <label className="label" htmlFor="name">Name</label>
+      {error && (
+        <div style={{ color: "red", marginBottom: "1rem" }}>{error}</div>
+      )}
+
+      <form
+        className={styles.partForm}
+        onSubmit={handleSubmit}
+        noValidate
+      >
+        <div className={styles.formRow}>
+          <label htmlFor="name">Name</label>
           <input
             id="name"
             name="name"
-            className="input"
             value={form.name}
             onChange={onChange}
             required
@@ -71,12 +86,11 @@ export default function PartForm({ onCreated }) {
           />
         </div>
 
-        <div className="form-row">
-          <label className="label" htmlFor="sku">SKU</label>
+        <div className={styles.formRow}>
+          <label htmlFor="sku">SKU</label>
           <input
             id="sku"
             name="sku"
-            className="input"
             value={form.sku}
             onChange={onChange}
             required
@@ -84,12 +98,11 @@ export default function PartForm({ onCreated }) {
           />
         </div>
 
-        <div className="form-row">
-          <label className="label" htmlFor="quantity">Quantity</label>
+        <div className={styles.formRow}>
+          <label htmlFor="quantity">Quantity</label>
           <input
             id="quantity"
             name="quantity"
-            className="input"
             type="number"
             min="0"
             step="1"
@@ -99,12 +112,11 @@ export default function PartForm({ onCreated }) {
           />
         </div>
 
-        <div className="form-row">
-          <label className="label" htmlFor="price">Price</label>
+        <div className={styles.formRow}>
+          <label htmlFor="price">Price</label>
           <input
             id="price"
             name="price"
-            className="input"
             type="number"
             min="0"
             step="0.01"
@@ -114,12 +126,11 @@ export default function PartForm({ onCreated }) {
           />
         </div>
 
-        <div className="form-row">
-          <label className="label" htmlFor="restockThreshold">Restock Threshold</label>
+        <div className={styles.formRow}>
+          <label htmlFor="restockThreshold">Restock Threshold</label>
           <input
             id="restockThreshold"
             name="restockThreshold"
-            className="input"
             type="number"
             min="0"
             step="1"
@@ -129,8 +140,8 @@ export default function PartForm({ onCreated }) {
           />
         </div>
 
-        <div className="actions">
-          <button type="submit" className="btn btn-primary">Add Part</button>
+        <div className={styles.actions}>
+          <button type="submit">Add Part</button>
         </div>
       </form>
     </div>

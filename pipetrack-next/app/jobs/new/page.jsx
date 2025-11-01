@@ -1,11 +1,11 @@
 "use client";
 import PrivateRoute from "@/components/PrivateRoute";
-import VanCard from "@/components/VanCard";
+import JobForm from "@/components/JobForm";
 
 export default function Page() {
   return (
     <PrivateRoute>
-      <VanCard />
+      <JobForm />
     </PrivateRoute>
   );
 }

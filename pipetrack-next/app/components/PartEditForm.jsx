@@ -1,110 +1,126 @@
+"use client";
+import React, { useState } from "react";
 import styles from "./PartEditForm.module.css";
-import React, { useState } from 'react';
 
 export default function PartEditForm({ part, onCancel, onUpdated }) {
-  // Local state for each field, initialized from the `part` prop
-  const [name, setName]               = useState(part.name);
-  const [sku, setSku]                 = useState(part.sku);
-  const [quantity, setQuantity]       = useState(part.quantity);
-  const [price, setPrice]             = useState(part.price);
-  const [restockThreshold, setRestock]= useState(part.restockThreshold);
-  const [error, setError]             = useState('');
+  const [name, setName] = useState(part.name);
+  const [sku, setSku] = useState(part.sku);
+  const [quantity, setQuantity] = useState(part.quantity);
+  const [price, setPrice] = useState(part.price);
+  const [restockThreshold, setRestock] = useState(part.restockThreshold);
+  const [error, setError] = useState("");
 
-  // Submit updated part
   async function handleSubmit(e) {
     e.preventDefault();
-    setError('');
+    setError("");
+
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_BASE_URL}/api/parts/${part._id}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/parts/${part._id}`,
         {
-          method: 'PUT',                   // HTTP PUT for update
-          credentials: 'include',          // include auth cookie
-          headers: { 'Content-Type': 'application/json' },
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name,
             sku,
             quantity,
             price,
-            restockThreshold
+            restockThreshold,
           }),
         }
       );
+
       if (!res.ok) throw new Error(`Update failed (${res.status})`);
-      onUpdated();                       // tell parent to reload list & exit edit mode
+      onUpdated?.(); // Refresh parent list and exit edit mode
     } catch (err) {
-      console.error('Failed to update part:', err);
-      setError('Could not save changes');
+      console.error("Failed to update part:", err);
+      setError("Could not save changes");
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-2 p-2 border rounded bg-gray-50">
-      <h3 className="font-semibold mb-2">Edit Part</h3>
-      {error && <p className="text-red-500 mb-2">{error}</p>}
+    <form onSubmit={handleSubmit} className={styles.partEditForm}>
+      <h3 className={styles.partEditTitle}>Edit Part</h3>
 
-      <label className="block mb-1">
+      {error && <p style={{ color: "red", marginBottom: "1rem" }}>{error}</p>}
+
+      <label>
         Name
         <input
           value={name}
-          onChange={e => setName(e.target.value)}
-          className="w-full border p-1 rounded"
+          onChange={(e) => setName(e.target.value)}
           required
+          style={{ width: "100%", padding: "8px", marginTop: "4px" }}
         />
       </label>
 
-      <label className="block mb-1">
+      <label style={{ display: "block", marginTop: "12px" }}>
         SKU
         <input
           value={sku}
-          onChange={e => setSku(e.target.value)}
-          className="w-full border p-1 rounded"
+          onChange={(e) => setSku(e.target.value)}
           required
+          style={{ width: "100%", padding: "8px", marginTop: "4px" }}
         />
       </label>
 
-      <label className="block mb-1">
+      <label style={{ display: "block", marginTop: "12px" }}>
         Quantity
         <input
           type="number"
           value={quantity}
-          onChange={e => setQuantity(+e.target.value)}
-          className="w-full border p-1 rounded"
+          onChange={(e) => setQuantity(+e.target.value)}
+          style={{ width: "100%", padding: "8px", marginTop: "4px" }}
         />
       </label>
 
-      <label className="block mb-1">
+      <label style={{ display: "block", marginTop: "12px" }}>
         Price
         <input
           type="number"
           step="0.01"
           value={price}
-          onChange={e => setPrice(+e.target.value)}
-          className="w-full border p-1 rounded"
+          onChange={(e) => setPrice(+e.target.value)}
+          style={{ width: "100%", padding: "8px", marginTop: "4px" }}
         />
       </label>
 
-      <label className="block mb-2">
+      <label style={{ display: "block", marginTop: "12px" }}>
         Restock Threshold
         <input
           type="number"
           value={restockThreshold}
-          onChange={e => setRestock(+e.target.value)}
-          className="w-full border p-1 rounded"
+          onChange={(e) => setRestock(+e.target.value)}
+          style={{ width: "100%", padding: "8px", marginTop: "4px" }}
         />
       </label>
 
-      <div className="flex space-x-2">
+      <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
         <button
           type="submit"
-          className="px-3 py-1 bg-blue-600 text-white rounded"
+          style={{
+            padding: "8px 14px",
+            background: "var(--primary, #2563eb)",
+            color: "white",
+            border: "none",
+            borderRadius: "var(--radius-sm, 6px)",
+            cursor: "pointer",
+          }}
         >
           Save
         </button>
         <button
           type="button"
-          onClick={onCancel}                // cancel edit mode
-          className="px-3 py-1 bg-gray-400 text-white rounded"
+          onClick={onCancel}
+          style={{
+            padding: "8px 14px",
+            background: "gray",
+            color: "white",
+            border: "none",
+            borderRadius: "var(--radius-sm, 6px)",
+            cursor: "pointer",
+          }}
         >
           Cancel
         </button>

@@ -1,45 +1,52 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import './PartsList.css';
-import PartForm from './PartForm';
-import PartEditForm from './PartEditForm';
+"use client";
+import React, { useCallback, useEffect, useState } from "react";
+import styles from "./PartsList.module.css";
+import PartForm from "./PartForm";
+import PartEditForm from "./PartEditForm";
 
 export default function PartsList() {
-  const API = process.env.REACT_APP_API_BASE_URL;
+  const API = process.env.NEXT_PUBLIC_API_BASE_URL;
   const [parts, setParts] = useState([]);
   const [editingPartId, setEditingPartId] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   const reloadParts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/parts`, { credentials: 'include' });
+      const res = await fetch(`${API}/parts`, { credentials: "include" });
       const data = await res.json();
-      if (!res.ok) throw new Error((data && data.message) || `Fetch failed (${res.status})`);
-      if (!Array.isArray(data)) throw new Error('Invalid response');
+      if (!res.ok)
+        throw new Error(data?.message || `Fetch failed (${res.status})`);
+      if (!Array.isArray(data)) throw new Error("Invalid response");
       setParts(data);
       setEditingPartId(null);
-      setError('');
+      setError("");
     } catch (e) {
-      setError((e && e.message) || 'Failed to load parts');
+      setError(e?.message || "Failed to load parts");
     } finally {
       setLoading(false);
     }
   }, [API]);
 
-  useEffect(() => { reloadParts(); }, [reloadParts]);
+  useEffect(() => {
+    reloadParts();
+  }, [reloadParts]);
 
   async function handleDelete(id) {
-    if (!window.confirm('Really delete this part?')) return;
+    if (!window.confirm("Really delete this part?")) return;
     try {
-      const res = await fetch(`${API}/parts/${id}`, { method: 'DELETE', credentials: 'include' });
+      const res = await fetch(`${API}/parts/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (res.status !== 204) {
         const txt = await res.text();
         throw new Error(`Delete failed (${res.status}): ${txt}`);
       }
-      setParts(list => list.filter(p => p._id !== id));
+      setParts((list) => list.filter((p) => p._id !== id));
     } catch (e) {
-      alert((e && e.message) || 'Could not delete part');
+      alert(e?.message || "Could not delete part");
     }
   }
 
@@ -49,22 +56,22 @@ export default function PartsList() {
     return <>{`$${safe.toFixed(2)}`}</>;
   }
 
-  if (loading) return <div className="container">Loading…</div>;
-  if (error) return <div className="container error-box">{error}</div>;
+  if (loading) return <div className={styles.container}>Loading…</div>;
+  if (error) return <div className={`${styles.container} ${styles.errorBox}`}>{error}</div>;
 
   return (
-    <div className="container">
+    <div className={styles.container}>
       <PartForm onCreated={reloadParts} />
 
-      <h2 className="h2">Parts Inventory</h2>
+      <h2>Parts Inventory</h2>
 
-      <table className="parts-table" aria-label="Parts inventory">
+      <table className={styles.partsTable} aria-label="Parts inventory">
         <tbody>
-          {parts.map(part => {
-            const qty = Number(part && part.quantity ? part.quantity : 0);
-            const rest = Number(part && part.restockThreshold ? part.restockThreshold : 0);
+          {parts.map((part) => {
+            const qty = Number(part?.quantity ?? 0);
+            const rest = Number(part?.restockThreshold ?? 0);
             const lowStock = qty < rest;
-            const cardClass = `part-card${lowStock ? ' low' : ''}`;
+            const cardClass = `${styles.partCard} ${lowStock ? styles.low : ""}`;
 
             return (
               <tr key={part._id}>
@@ -77,28 +84,46 @@ export default function PartsList() {
                         onUpdated={reloadParts}
                       />
                     ) : (
-                      <div className="card-grid no-thumb">
-                        <div className="meta-only">
-                          <h4 className="name">{part.name}</h4>
-                          <div className="sku">SKU: {part.sku}</div>
-                          <div className="qty">Qty: {qty}</div>
-                          {part.barcode ? <div className="barcode">Barcode: {part.barcode}</div> : null}
+                      <div className={`${styles.cardGrid} ${styles.noThumb}`}>
+                        <div className={styles.metaOnly}>
+                          <h4 className={styles.name}>{part.name}</h4>
+                          <div className={styles.sku}>SKU: {part.sku}</div>
+                          <div className={styles.qty}>Qty: {qty}</div>
+                          {part.barcode && (
+                            <div className={styles.barcode}>
+                              Barcode: {part.barcode}
+                            </div>
+                          )}
                         </div>
 
-                        <div className="stat">
-                          <div className="label">Price</div>
-                          <div className="value"><Price value={part.price} /></div>
+                        <div className={styles.stat}>
+                          <div className={styles.label}>Price</div>
+                          <div className={styles.value}>
+                            <Price value={part.price} />
+                          </div>
                         </div>
 
-                        <div className="stat">
-                          <div className="label">Restock at</div>
-                          <div className="value">{rest}</div>
+                        <div className={styles.stat}>
+                          <div className={styles.label}>Restock at</div>
+                          <div className={styles.value}>{rest}</div>
                         </div>
 
-                        <div className="actions">
-                          {lowStock ? <span className="badge-danger">Restock</span> : null}
-                          <button className="btn" onClick={() => setEditingPartId(part._id)}>Edit</button>
-                          <button className="btn btn-danger" onClick={() => handleDelete(part._id)}>Delete</button>
+                        <div className={styles.actions}>
+                          {lowStock && (
+                            <span className={styles.badgeDanger}>Restock</span>
+                          )}
+                          <button
+                            className={styles.btn}
+                            onClick={() => setEditingPartId(part._id)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className={`${styles.btn} ${styles.btnDanger}`}
+                            onClick={() => handleDelete(part._id)}
+                          >
+                            Delete
+                          </button>
                         </div>
                       </div>
                     )}
@@ -108,13 +133,13 @@ export default function PartsList() {
             );
           })}
 
-          {parts.length === 0 ? (
+          {parts.length === 0 && (
             <tr>
               <td>
-                <div className="empty">No parts yet.</div>
+                <div className={styles.empty}>No parts yet.</div>
               </td>
             </tr>
-          ) : null}
+          )}
         </tbody>
       </table>
     </div>

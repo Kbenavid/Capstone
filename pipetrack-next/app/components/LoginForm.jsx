@@ -1,89 +1,98 @@
+"use client";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import styles from "./LoginForm.module.css";
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 
 export default function LoginForm({ onLogin }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError]       = useState('');
-  const navigate                = useNavigate();
-  const API_BASE                = process.env.REACT_APP_API_BASE_URL;
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError('');
+    setError("");
 
     try {
-      const res = await fetch(
-        `${API_BASE}/auth/login`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',           // include httpOnly cookie
-          body: JSON.stringify({ username, password }),
-        }
-      );
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username, password }),
+      });
 
       if (!res.ok) {
         const { message } = await res.json().catch(() => ({}));
         throw new Error(message || `Login failed (${res.status})`);
       }
 
-      // Success: cookie is set by the server
-      onLogin();
-      navigate('/', { replace: true });
+      if (onLogin) onLogin();
+      router.push("/");
     } catch (err) {
-      console.error('Login error:', err);
+      console.error("Login error:", err);
       setError(err.message);
     }
   }
 
   return (
-    <div className="max-w-md mx-auto p-4 mt-8">
-      <h2 className="text-2xl mb-4 text-center">Login to PipeTrack</h2>
-      {error && (
-        <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <label className="block">
-          <span className="text-sm font-medium">Username</span>
-          <input
-            type="text"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded p-2"
-            required
-          />
-        </label>
+    <div className={styles.loginWrap}>
+      <div className={styles.loginCard}>
+        <h2 className={styles.loginTitle}>Login to PipeTrack</h2>
 
-        <label className="block">
-          <span className="text-sm font-medium">Password</span>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="mt-1 block w-full border-gray-300 rounded p-2"
-            required
-          />
-        </label>
+        {error && (
+          <div style={{ color: "red", marginBottom: "1rem" }}>{error}</div>
+        )}
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          Log In
-        </button>
-      </form>
+        <form onSubmit={handleSubmit}>
+          <label>
+            Username
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              style={{ width: "100%", padding: "8px", marginTop: "4px" }}
+            />
+          </label>
 
-      <p className="mt-4 text-center text-sm">
-        Don’t have an account?{' '}
-        <Link to="/register" className="text-blue-600 hover:underline">
-          Register here
-        </Link>.
-      </p>
+          <label style={{ display: "block", marginTop: "12px" }}>
+            Password
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{ width: "100%", padding: "8px", marginTop: "4px" }}
+            />
+          </label>
+
+          <button
+            type="submit"
+            style={{
+              width: "100%",
+              background: "var(--accent, #2563eb)",
+              color: "white",
+              padding: "10px",
+              marginTop: "16px",
+              borderRadius: "var(--radius, 6px)",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            Log In
+          </button>
+        </form>
+
+        <p style={{ textAlign: "center", marginTop: "16px" }}>
+          Don’t have an account?{" "}
+          <Link href="/register" style={{ color: "#2563eb" }}>
+            Register here
+          </Link>
+          .
+        </p>
+      </div>
     </div>
   );
 }
-

@@ -1,177 +1,198 @@
-import styles from "./JobForm.module.css";
+"use client";
 import React, { useEffect, useState } from "react";
-
-const API = process.env.REACT_APP_API_BASE_URL || "";
+import styles from "./JobForm.module.css";
 
 export default function JobForm({ onCreated }) {
-  const [customerName, setCustomerName] = useState("");
-  const [vanId, setVanId] = useState("");
+  const API = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const [form, setForm] = useState({
+    customerName: "",
+    vanId: "",
+    partsUsed: [], // [{ partId, quantity }]
+  });
   const [parts, setParts] = useState([]);
-  const [selection, setSelection] = useState([]);
   const [error, setError] = useState("");
+  const [openParts, setOpenParts] = useState(false);
 
-  // load parts for dropdown
+  // Load available parts
   useEffect(() => {
-    // BASE already ends with /api → don't add another /api here
-    fetch(`${API}/parts`, { credentials: "include" })
-      .then((r) => r.json())
-      .then(setParts)
-      .catch(console.error);
-  }, []);
+    async function fetchParts() {
+      try {
+        const res = await fetch(`${API}/parts`, { credentials: "include" });
+        const data = await res.json();
+        if (Array.isArray(data)) setParts(data);
+      } catch (err) {
+        console.error("Failed to fetch parts:", err);
+      }
+    }
+    fetchParts();
+  }, [API]);
 
-  function addLine() {
-    setSelection((prev) => [
-      ...prev,
-      { part: parts[0]?._id || "", quantity: 1 },
-    ]);
+  // Basic field changes
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
   }
 
-  function updateLine(i, field, value) {
-    setSelection((prev) => {
-      const copy = [...prev];
-      copy[i][field] = field === "quantity" ? +value : value;
-      return copy;
+  // Toggle a part’s checkbox
+  function togglePart(partId) {
+    setForm((f) => {
+      const exists = f.partsUsed.find((p) => p.partId === partId);
+      if (exists) {
+        // remove
+        return {
+          ...f,
+          partsUsed: f.partsUsed.filter((p) => p.partId !== partId),
+        };
+      } else {
+        // add with default qty 1
+        return {
+          ...f,
+          partsUsed: [...f.partsUsed, { partId, quantity: 1 }],
+        };
+      }
     });
   }
 
-  function removeLine(i) {
-    setSelection((prev) => prev.filter((_, idx) => idx !== i));
+  // Update quantity for a selected part
+  function updateQuantity(partId, newQty) {
+    setForm((f) => ({
+      ...f,
+      partsUsed: f.partsUsed.map((p) =>
+        p.partId === partId ? { ...p, quantity: Number(newQty) || 0 } : p
+      ),
+    }));
   }
 
+  // Submit job
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
-    if (!customerName || !vanId || selection.length === 0) {
-      setError("All fields + at least one part required");
+    if (!form.customerName || !form.vanId || form.partsUsed.length === 0) {
+      setError("All fields + at least one part with quantity required");
       return;
     }
 
     try {
+      // Transform partsUsed → expected backend shape
+const payload = {
+  customerName: form.customerName,
+  vanId: form.vanId,
+  partsUsed: form.partsUsed.map(p => ({
+    part: p.partId, // rename key for backend
+    quantity: p.quantity,
+  })),
+};
+
       const res = await fetch(`${API}/jobs`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName,
-          vanId,
-          partsUsed: selection.map((s) => ({
-            part: s.part,
-            quantity: s.quantity,
-          })),
-        }),
+        credentials: "include",
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(`Failed (${res.status})`);
-      await res.json();
 
-      onCreated?.(); // refresh parent list
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to save job");
 
-      // reset form
-      setCustomerName("");
-      setVanId("");
-      setSelection([]);
+      onCreated?.(data);
+      setForm({ customerName: "", vanId: "", partsUsed: [] });
+      setOpenParts(false);
     } catch (err) {
-      console.error(err);
+      console.error("Job create error:", err);
       setError(err.message);
     }
   }
 
   return (
-    <div className="page">
-      <div className="card">
-        <div className="card-header">
-          <h1 className="card-title">New Job</h1>
+    <div className={styles.jobFormWrap}>
+      <h3 className={styles.jobFormTitle}>New Job</h3>
+      {error && <div className={styles.error}>{error}</div>}
+
+      <form onSubmit={handleSubmit} className={styles.jobForm}>
+        <div className={styles.row}>
+          <label>Customer Name</label>
+          <input
+            name="customerName"
+            value={form.customerName}
+            onChange={handleChange}
+            className="input"
+            placeholder="e.g. John Smith"
+          />
         </div>
 
-        <div className="card-body">
-          {error && <div className="error-box" style={{ marginBottom: 12 }}>{error}</div>}
+        <div className={styles.row}>
+          <label>Van ID</label>
+          <input
+            name="vanId"
+            value={form.vanId}
+            onChange={handleChange}
+            className="input"
+            placeholder="e.g. Van-01"
+          />
+        </div>
 
-          <form onSubmit={handleSubmit} className="form">
-            <div className="form-row">
-              <label className="label">Customer Name</label>
-              <input
-                className="input"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Enter customer name"
-                required
-              />
-            </div>
+        {/* Parts dropdown */}
+        <div className={styles.row}>
+          <label>Parts Used</label>
+          <div
+            className={styles.dropdownHeader}
+            onClick={() => setOpenParts((prev) => !prev)}
+          >
+            <span>
+              {form.partsUsed.length > 0
+                ? `${form.partsUsed.length} part(s) selected`
+                : "Select Parts"}
+            </span>
+            <span className={styles.chevron}>{openParts ? "▲" : "▼"}</span>
+          </div>
 
-            <div className="form-row">
-              <label className="label">Van ID</label>
-              <input
-                className="input"
-                value={vanId}
-                onChange={(e) => setVanId(e.target.value)}
-                placeholder="e.g., VAN-01"
-                required
-              />
-            </div>
+          {openParts && (
+            <div className={styles.dropdownPanel}>
+              <div className={styles.partHeaderRow}>
+                <span>Select</span>
+                <span>Part Name</span>
+                <span>Available</span>
+                <span>Use Qty</span>
+              </div>
 
-            <div className="form-row" style={{ alignItems: "start" }}>
-              <label className="label" style={{ marginTop: 10 }}>Parts Used</label>
-              <div style={{ width: "100%" }}>
-                {selection.map((line, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 90px 36px",
-                      gap: 8,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <select
-                      className="input"
-                      value={line.part}
-                      onChange={(e) => updateLine(i, "part", e.target.value)}
-                    >
-                      {parts.map((p) => (
-                        <option key={p._id} value={p._id}>
-                          {p.name} ({p.sku})
-                        </option>
-                      ))}
-                    </select>
+              {parts.map((part) => {
+                const selected = form.partsUsed.find(
+                  (p) => p.partId === part._id
+                );
+                return (
+                  <div key={part._id} className={styles.partRow}>
                     <input
-                      className="input"
+                      type="checkbox"
+                      checked={!!selected}
+                      onChange={() => togglePart(part._id)}
+                    />
+                    <span>{part.name}</span>
+                    <span>{part.quantity}</span>
+                    <input
                       type="number"
                       min="1"
-                      value={line.quantity}
-                      onChange={(e) => updateLine(i, "quantity", e.target.value)}
+                      value={selected ? selected.quantity : ""}
+                      onChange={(e) =>
+                        updateQuantity(part._id, e.target.value)
+                      }
+                      disabled={!selected}
+                      className={styles.qtyInput}
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeLine(i)}
-                      className="btn"
-                      title="Remove"
-                    >
-                      ×
-                    </button>
                   </div>
-                ))}
+                );
+              })}
 
-                <button
-                  type="button"
-                  onClick={addLine}
-                  className="btn"
-                  style={{ marginTop: 4 }}
-                >
-                  Add Part
-                </button>
-              </div>
+              {parts.length === 0 && (
+                <p className={styles.empty}>No parts in inventory.</p>
+              )}
             </div>
-
-            <div className="card-actions">
-              <button type="submit" className="btn btn-primary">
-                Save Job
-              </button>
-            </div>
-          </form>
-
-          <p className="help">All fields are required. Add at least one part.</p>
+          )}
         </div>
-      </div>
+
+        <button type="submit" className="btn btn-primary">
+          Save Job
+        </button>
+      </form>
     </div>
   );
 }

@@ -1,14 +1,14 @@
-.logout-btn {
-    margin-left: auto;
-    background: var(--danger);
-    color: #fff;
-    border: none;
-    padding: 8px 14px;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-  }
-  
-  .logout-btn:hover {
-    background: #b91c1c;
-  }
-  
+.logoutBtn {
+  margin-left: auto;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.logoutBtn:hover {
+  background: #b91c1c;
+}

@@ -1,19 +1,18 @@
-.login-wrap {
-    width: min(420px, 92%);
-    margin: var(--space-6) auto;
-  }
-  
-  .login-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: var(--space-5);
-    box-shadow: var(--shadow-1);
-  }
-  
-  .login-title {
-    font-size: var(--fs-4);
-    text-align: center;
-    margin-bottom: var(--space-4);
-  }
-  
+.loginWrap {
+  width: min(420px, 92%);
+  margin: var(--space-6) auto;
+}
+
+.loginCard {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-1);
+}
+
+.loginTitle {
+  font-size: var(--fs-4);
+  text-align: center;
+  margin-bottom: var(--space-4);
+}

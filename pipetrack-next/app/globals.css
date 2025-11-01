@@ -1,0 +1,60 @@
+/* ─── CSS Variables for Theme ───────────────────────── */
+:root {
+  --primary: #2563eb;
+  --primary-600: #1d4ed8;
+  --panel: #ffffff;
+  --panel-2: #f8fafc;
+  --border: #e5e7eb;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --fs-0: 12px;
+  --fs-1: 14px;
+  --fs-2: 16px;
+  --fs-3: 18px;
+  --fs-4: 22px;
+  --muted: #6b7280;
+  --danger: #ef4444;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --text: #111827;
+}
+
+/* ─── Global Resets ─────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--panel-2);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ─── Utility Classes ───────────────────────────────── */
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ─── Layout Helpers ────────────────────────────────── */
+main {
+  padding: var(--space-6);
+}

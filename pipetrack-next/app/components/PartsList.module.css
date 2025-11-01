@@ -1,26 +1,105 @@
-.parts-table { width: 100%; border-collapse: separate; border-spacing: 0 12px; }
-.parts-table td { padding: 0; border: none; }
+.partsTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 12px;
+}
 
-.part-card { background: var(--panel, #ffffff); border: 1px solid var(--border, #e5e7eb); border-radius: var(--radius, 12px); box-shadow: var(--shadow-1, 0 1px 2px rgba(0,0,0,.12)); padding: var(--space-4, 16px); }
-.part-card.low { border-color: #ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,.12); }
+.partsTable td {
+  padding: 0;
+  border: none;
+}
+
+.partCard {
+  background: var(--panel, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius, 12px);
+  box-shadow: var(--shadow-1, 0 1px 2px rgba(0, 0, 0, 0.12));
+  padding: var(--space-4, 16px);
+}
+
+.low {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
+}
 
 /* No image/thumbnail version */
-.card-grid.no-thumb { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; gap: var(--space-4, 16px); align-items: center; }
-.meta-only { display: grid; gap: 4px; }
-.name { font-size: var(--fs-3, 18px); margin: 0; }
-.sku, .barcode { font-size: var(--fs-1, 14px); color: var(--muted, #556274); }
-.qty { font-weight: 700; }
+.cardGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr auto;
+  gap: var(--space-4, 16px);
+  align-items: center;
+}
 
-.stat { text-align: left; }
-.stat .label { font-size: var(--fs-1, 14px); color: var(--muted, #556274); }
-.stat .value { font-size: var(--fs-2, 16px); font-weight: 600; }
+.noThumb {
+  /* for clarity only; using both .cardGrid.noThumb in jsx */
+}
 
-.actions { display: flex; gap: var(--space-2, 8px); justify-content: flex-end; align-items: center; }
-.badge-danger { display: inline-block; padding: 4px 8px; border-radius: 10px; background: var(--danger, #ef4444); color: #fff; font-size: var(--fs-0, 12px); }
+.metaOnly {
+  display: grid;
+  gap: 4px;
+}
 
-.empty { padding: var(--space-5, 24px); background: var(--panel, #fff); border: 1px dashed var(--border, #e5e7eb); border-radius: var(--radius, 12px); color: var(--muted, #556274); text-align: center; }
+.name {
+  font-size: var(--fs-3, 18px);
+  margin: 0;
+}
+
+.sku,
+.barcode {
+  font-size: var(--fs-1, 14px);
+  color: var(--muted, #556274);
+}
+
+.qty {
+  font-weight: 700;
+}
+
+.stat {
+  text-align: left;
+}
+
+.label {
+  font-size: var(--fs-1, 14px);
+  color: var(--muted, #556274);
+}
+
+.value {
+  font-size: var(--fs-2, 16px);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2, 8px);
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.badgeDanger {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: var(--danger, #ef4444);
+  color: #fff;
+  font-size: var(--fs-0, 12px);
+}
+
+.empty {
+  padding: var(--space-5, 24px);
+  background: var(--panel, #fff);
+  border: 1px dashed var(--border, #e5e7eb);
+  border-radius: var(--radius, 12px);
+  color: var(--muted, #556274);
+  text-align: center;
+}
 
 @media (max-width: 720px) {
-  .card-grid.no-thumb { grid-template-columns: 1fr; gap: var(--space-3, 12px); }
-  .actions { justify-content: flex-start; }
+  .cardGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3, 12px);
+  }
+
+  .actions {
+    justify-content: flex-start;
+  }
 }

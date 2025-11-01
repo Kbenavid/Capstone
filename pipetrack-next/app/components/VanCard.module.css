@@ -1,0 +1,66 @@
+.vanCard {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-1);
+    width: min(500px, 94%);
+    margin: var(--space-5) auto;
+  }
+  
+  .vanTitle {
+    font-size: var(--fs-4);
+    font-weight: 700;
+    margin-bottom: var(--space-4);
+    text-align: center;
+  }
+  
+  .vanDetails {
+    display: grid;
+    gap: var(--space-3);
+  }
+  
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed var(--border);
+    padding-bottom: 6px;
+  }
+  
+  .label {
+    color: var(--muted, #556274);
+    font-weight: 600;
+    font-size: var(--fs-1);
+  }
+  
+  .value {
+    font-weight: 500;
+    font-size: var(--fs-2);
+  }
+  
+  .status {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  
+  .active {
+    background: #16a34a; /* green */
+    color: white;
+  }
+  
+  .inactive {
+    background: #dc2626; /* red */
+    color: white;
+  }
+  
+  .empty {
+    text-align: center;
+    color: var(--muted, #6b7280);
+    padding: var(--space-5);
+    background: var(--panel);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }

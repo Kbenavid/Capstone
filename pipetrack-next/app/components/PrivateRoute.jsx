@@ -1,23 +1,50 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
-const API_BASE =
-  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||
-  process.env.REACT_APP_API_BASE_URL ||
-  "";
-
+/**
+ * PrivateRoute
+ * Protects client-side pages by verifying user authentication
+ */
 export default function PrivateRoute({ children }) {
-  const [ok, setOk] = useState(null);
+  const [authorized, setAuthorized] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const router = useRouter();
+
   useEffect(() => {
-    (async () => {
+    const checkAuth = async () => {
       try {
-        const r = await fetch(`${API_BASE}/auth/me`, { credentials: "include" });
-        setOk(r.ok);
-      } catch {
-        setOk(false);
+        // ✅ Use the actual backend route
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/me`,
+          { credentials: "include" }
+        );
+
+        const data = await res.json();
+        if (data.ok) {
+          setAuthorized(true);
+        } else {
+          router.push("/login");
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        router.push("/login");
+      } finally {
+        setChecking(false);
       }
-    })();
-  }, []);
-  if (ok === null) return null; // or spinner
-  return ok ? children : <Navigate to="/login" replace />;
+    };
+
+    checkAuth();
+  }, [router]);
+
+  if (checking) {
+    return (
+      <div style={{ padding: "2rem", textAlign: "center" }}>
+        <p>Checking authentication...</p>
+      </div>
+    );
+  }
+
+  return authorized ? children : null;
 }

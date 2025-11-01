@@ -1,11 +1,10 @@
-.job-form-wrap {
-    width: min(600px, 92%);
-    margin: var(--space-6) auto;
-  }
-  
-  .job-form-title {
-    font-size: var(--fs-4);
-    margin-bottom: var(--space-4);
-    text-align: center;
-  }
-  
+.jobFormWrap {
+  width: min(600px, 92%);
+  margin: var(--space-6) auto;
+}
+
+.jobFormTitle {
+  font-size: var(--fs-4);
+  margin-bottom: var(--space-4);
+  text-align: center;
+}
