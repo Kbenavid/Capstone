@@ -1,0 +1,10 @@
+.jobs-list {
+    margin: var(--space-6) auto;
+    width: min(1100px, 96%);
+  }
+  
+  .jobs-list-title {
+    font-size: var(--fs-4);
+    margin-bottom: var(--space-4);
+  }
+  

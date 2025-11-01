@@ -1,0 +1,10 @@
+.part-edit-form {
+    width: min(600px, 92%);
+    margin: var(--space-6) auto;
+  }
+  
+  .part-edit-title {
+    font-size: var(--fs-4);
+    margin-bottom: var(--space-4);
+  }
+  
