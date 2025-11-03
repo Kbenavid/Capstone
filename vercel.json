@@ -1,12 +1,9 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "pipetrack-next/package.json",
-        "use": "@vercel/next"
-      }
-    ],
-    "routes": [
-      { "src": "/(.*)", "dest": "pipetrack-next/$1" }
-    ]
-  }
+  "version": 2,
+  "builds": [
+    { "src": "pipetrack-next/package.json", "use": "@vercel/next" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "pipetrack-next/$1" }
+  ]
+}
