@@ -1,5 +1,7 @@
+// app/layout.jsx
 import "./globals.css";
-import NavBar from "./components/NavBar.jsx";
+import NavBar from "./components/NavBar";
+
 export const metadata = {
   title: "PipeTrack",
   description: "Plumbing van inventory management system",
