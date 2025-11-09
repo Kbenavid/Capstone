@@ -31,8 +31,9 @@ app.use(cookieParser());
 
 // ─── CORS: LOCAL + DEPLOYMENT SUPPORT ──────────────────────
 const allowedOrigins = [
-  "http://localhost:3000",           // Local frontend
-  "https://pipetrack.onrender.com",  // Render frontend
+  "http://localhost:3000", // Local frontend
+  "https://pipetrack.onrender.com", // (Old) Render frontend
+  "https://capstone-gljwiyapk-kyle-benaides-projects.vercel.app" // ✅ New Vercel frontend
 ];
 
 app.use(
@@ -41,6 +42,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.warn("Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
