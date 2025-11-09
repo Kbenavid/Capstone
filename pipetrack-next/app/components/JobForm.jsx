@@ -7,13 +7,12 @@ export default function JobForm({ onCreated }) {
   const [form, setForm] = useState({
     customerName: "",
     vanId: "",
-    partsUsed: [], // [{ partId, quantity }]
+    partsUsed: [],
   });
   const [parts, setParts] = useState([]);
   const [error, setError] = useState("");
   const [openParts, setOpenParts] = useState(false);
 
-  // Load available parts
   useEffect(() => {
     async function fetchParts() {
       try {
@@ -27,24 +26,20 @@ export default function JobForm({ onCreated }) {
     fetchParts();
   }, [API]);
 
-  // Basic field changes
   function handleChange(e) {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
   }
 
-  // Toggle a part’s checkbox
   function togglePart(partId) {
     setForm((f) => {
       const exists = f.partsUsed.find((p) => p.partId === partId);
       if (exists) {
-        // remove
         return {
           ...f,
           partsUsed: f.partsUsed.filter((p) => p.partId !== partId),
         };
       } else {
-        // add with default qty 1
         return {
           ...f,
           partsUsed: [...f.partsUsed, { partId, quantity: 1 }],
@@ -53,7 +48,6 @@ export default function JobForm({ onCreated }) {
     });
   }
 
-  // Update quantity for a selected part
   function updateQuantity(partId, newQty) {
     setForm((f) => ({
       ...f,
@@ -63,7 +57,6 @@ export default function JobForm({ onCreated }) {
     }));
   }
 
-  // Submit job
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -74,15 +67,14 @@ export default function JobForm({ onCreated }) {
     }
 
     try {
-      // Transform partsUsed → expected backend shape
-const payload = {
-  customerName: form.customerName,
-  vanId: form.vanId,
-  partsUsed: form.partsUsed.map(p => ({
-    part: p.partId, // rename key for backend
-    quantity: p.quantity,
-  })),
-};
+      const payload = {
+        customerName: form.customerName,
+        vanId: form.vanId,
+        partsUsed: form.partsUsed.map((p) => ({
+          part: p.partId,
+          quantity: p.quantity,
+        })),
+      };
 
       const res = await fetch(`${API}/jobs`, {
         method: "POST",
@@ -104,35 +96,32 @@ const payload = {
   }
 
   return (
-    <div className={styles.jobFormWrap}>
-      <h3 className={styles.jobFormTitle}>New Job</h3>
+    <section className={styles.jobFormCard}>
+      <h2 className={styles.jobFormTitle}>Create New Job</h2>
       {error && <div className={styles.error}>{error}</div>}
 
       <form onSubmit={handleSubmit} className={styles.jobForm}>
-        <div className={styles.row}>
+        <div className={styles.formGroup}>
           <label>Customer Name</label>
           <input
             name="customerName"
             value={form.customerName}
             onChange={handleChange}
-            className="input"
             placeholder="e.g. John Smith"
           />
         </div>
 
-        <div className={styles.row}>
+        <div className={styles.formGroup}>
           <label>Van ID</label>
           <input
             name="vanId"
             value={form.vanId}
             onChange={handleChange}
-            className="input"
             placeholder="e.g. Van-01"
           />
         </div>
 
-        {/* Parts dropdown */}
-        <div className={styles.row}>
+        <div className={styles.formGroup}>
           <label>Parts Used</label>
           <div
             className={styles.dropdownHeader}
@@ -189,10 +178,10 @@ const payload = {
           )}
         </div>
 
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className={styles.addJobBtn}>
           Save Job
         </button>
       </form>
-    </div>
+    </section>
   );
 }
