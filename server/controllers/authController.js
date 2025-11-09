@@ -1,4 +1,3 @@
-// server/controllers/authController.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { createResetToken, hashToken } = require('../utils/resetToken');
@@ -42,7 +41,7 @@ exports.register = async (req, res) => {
         .json({ ok: false, error: 'Username and password are required.' });
     }
 
-    username = String(username).trim().toLowerCase();
+    username = String(username).trim();
 
     const exists = await User.findOne({ username });
     if (exists) {
@@ -86,9 +85,9 @@ exports.login = async (req, res) => {
 
     let query;
     if (String(rawId).includes('@')) {
-      query = { email: String(rawId).toLowerCase().trim() };
+      query = { email: String(rawId).trim().toLowerCase() };
     } else {
-      query = { username: String(rawId).trim() };
+      query = { username: String(rawId).trim().toLowerCase() };
     }
 
     const user = await User.findOne(query);

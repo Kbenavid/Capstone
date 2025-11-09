@@ -3,22 +3,27 @@ const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema(
   {
-    // Keep username if you already use it elsewhere (optional)
-    username: { type: String, trim: true, unique: true, sparse: true },
+    username: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
+      lowercase: true,   
+    },
 
-    // Email-based login (recommended for forgot-password)
     email: {
       type: String,
-      required: false,
-      index: { unique: true, sparse: true },
+      trim: true,
+      unique: true,
+      sparse: true,
+      lowercase: true,   
     },
 
     passwordHash: { type: String, required: true },
 
-    // Password reset support
-    tokenVersion: { type: Number, default: 0 },       // bump on password reset to invalidate old JWTs
-    resetPasswordTokenHash: { type: String },         // store only the SHA-256 hash
-    resetPasswordExpiresAt: { type: Date },           // reset token expiry
+    tokenVersion: { type: Number, default: 0 },
+    resetPasswordTokenHash: { type: String },
+    resetPasswordExpiresAt: { type: Date },
   },
   { timestamps: true }
 );
