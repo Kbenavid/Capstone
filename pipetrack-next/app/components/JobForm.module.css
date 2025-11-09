@@ -1,17 +1,18 @@
 .jobFormCard {
-  background: #fff;
-  padding: 1.5rem;
+  max-width: 500px;
+  margin: 2rem auto; /* centers horizontally and adds top/bottom spacing */
+  background: #ffffff;
+  padding: 1.5rem 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-  max-width: 600px;
-  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .jobFormTitle {
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  text-align: center;
+  color: #111827;
 }
 
 .jobForm {
@@ -20,10 +21,12 @@
   gap: 1rem;
 }
 
+/* Form inputs */
 .formGroup label {
   font-weight: 500;
   display: block;
   margin-bottom: 0.25rem;
+  color: #111827;
 }
 
 .formGroup input {
@@ -32,6 +35,13 @@
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.formGroup input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  outline: none;
 }
 
 /* Dropdown styling */
@@ -44,6 +54,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.dropdownHeader:hover {
+  background: #f3f4f6;
 }
 
 .dropdownPanel {
@@ -76,6 +90,7 @@
   padding: 0.5rem 0;
 }
 
+/* Button styling */
 .addJobBtn {
   background-color: #2563eb;
   color: white;
@@ -91,6 +106,7 @@
   background-color: #1e40af;
 }
 
+/* Error message */
 .error {
   background: #fee2e2;
   color: #b91c1c;
@@ -98,4 +114,5 @@
   border-radius: 6px;
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
+  text-align: center;
 }
