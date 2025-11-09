@@ -31,25 +31,29 @@ app.use(cookieParser());
 
 // ─── CORS: LOCAL + DEPLOYMENT SUPPORT ──────────────────────
 const allowedOrigins = [
-  "http://localhost:3000", // Local frontend
-  "https://pipetrack.onrender.com", // (Old) Render frontend
-  "https://capstone-gljwiyapk-kyle-benaides-projects.vercel.app" // ✅ New Vercel frontend
+  "http://localhost:3000", // local dev
+  "https://pipetrack.onrender.com", // old frontend
+  "https://capstone.vercel.app", // base Vercel project domain
 ];
 
+// Dynamically allow any Vercel preview subdomain
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
         callback(null, true);
       } else {
-        console.warn("Blocked by CORS:", origin);
+        console.warn("❌ Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
   })
 );
-
 // ─── ROUTES ─────────────────────────────────────────────────
 const authRoutes = require("./routes/auth");
 const partsRoutes = require("./routes/parts");
