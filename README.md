@@ -23,7 +23,7 @@ Backend: Node.js, Express.js, MongoDB, Mongoose
 Tools: Render, Vercel, Postman, GitHub
 
 ⸻
-
+```
 Project Structure
 
 root/
@@ -39,7 +39,7 @@ root/
  │   ├── routes/
  │   └── server.js
  └── README.md
-
+```
 Architecture Overview
 	•	Models implement the MongoDB schemas (User, Part, Job, Counter).
 	•	Controllers handle all business logic and database interaction.
@@ -48,18 +48,11 @@ Architecture Overview
 
 ⸻
 
-Database Schema (ERD)
-
-PipeTrack uses four MongoDB collections:
-	•	User — authentication and identity
-	•	Part — inventory items
-	•	Job — jobs and parts used
-	•	Counter — sequence generator for barcodes (supporting model)
-
+```mermaid
 erDiagram
-  USER ||--o{ JOB : "creates jobs"
-  USER ||--o{ PART : "owns parts"
-  JOB }o--o{ PART : "uses parts"
+  USER ||--o{ JOB : "creates"
+  USER ||--o{ PART : "owns"
+  JOB }o--o{ PART : "uses"
 
   USER {
     ObjectId _id
@@ -89,13 +82,13 @@ erDiagram
     ObjectId _id
     string customerName
     string vanId
-    PartUsage[] partsUsed
+    string partsUsed
     number totalCost
     date jobDate
     date createdAt
     date updatedAt
   }
-
+```
 
 ⸻
 
@@ -103,26 +96,21 @@ User Flow
 
 This flow reflects the live behavior of your Next.js frontend and Express backend.
 
+```mermaid 
 flowchart LR
-  A[Open PipeTrack] --> B[Login or Register]
-  B --> C[POST /api/auth/login or /api/auth/register]
-  C --> D[Backend validates and sets auth cookie]
-  D --> E[Dashboard (Protected Route)]
+  A["Open PipeTrack"] --> B["Login or register"]
+  B --> C["Send auth request to backend"]
+  C --> D["Backend validates user and sets auth cookie"]
+  D --> E["Dashboard"]
 
-  E --> F[View Jobs]
-  E --> G[Create Job]
-  E --> H[Manage Inventory]
+  E --> F["View jobs"]
+  E --> G["Create job"]
+  E --> H["Manage inventory"]
 
-  G --> I[Submit JobForm]
-  I --> J[POST /api/jobs]
-  J --> K[Backend creates Job and updates Part quantities]
-
-  H --> L[GET /api/parts]
-  L --> M[Create Update Delete Parts]
-
-  K --> F
-  F --> E
-  H --> E
+  G --> I["Fill out job form"]
+  I --> J["Submit job to /api/jobs"]
+  J --> K["Backend creates job and updates part quantities"]
+```
 
 
 ⸻
