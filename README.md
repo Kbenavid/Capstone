@@ -2,17 +2,17 @@ PipeTrack
 
 Plumbing Inventory & Job Management Application
 
-PipeTrack is a full-stack application built with a Next.js frontend and an Express/MongoDB backend. It provides plumbing technicians with an easy way to manage parts inventory, log jobs, and track items used in the field. Inventory updates automatically as technicians document their work.
+PipeTrack is a full-stack application built with a Next.js frontend and an Express/MongoDB backend. It enables plumbing technicians to manage parts inventory, create jobs, and track items used in the field. Inventory levels update automatically as parts are used on jobs.
 
 ⸻
 
 Features
-	•	Secure login and authentication using JSON Web Tokens
-	•	Create and manage jobs
-	•	Add parts to a job and automatically reduce inventory counts
-	•	View and manage parts inventory
-	•	Mobile-friendly Next.js interface
-	•	Clear separation between frontend UI and backend API
+	•	Secure authentication using JSON Web Tokens
+	•	Create, view, and manage jobs
+	•	Add parts to jobs, with automatic inventory updates
+	•	Full inventory management (create/update/delete parts)
+	•	Responsive Next.js frontend optimized for field use
+	•	Clean separation between backend API and frontend UI
 
 ⸻
 
@@ -20,14 +20,19 @@ Tech Stack
 
 Frontend: Next.js (App Router), Tailwind CSS, Fetch API
 Backend: Node.js, Express.js, MongoDB, Mongoose
-Tools: Render, Vercel, GitHub, Postman
+Tools: Render, Vercel, Postman, GitHub
 
 ⸻
 
 Project Structure
 
 root/
- ├── app/                   # Next.js frontend (App Router)
+ ├── app/                   # Next.js frontend
+ │   ├── page.jsx
+ │   ├── jobs/
+ │   ├── inventory/
+ │   ├── components/
+ │   └── ...
  ├── server/                # Express backend
  │   ├── controllers/
  │   ├── models/
@@ -36,48 +41,89 @@ root/
  └── README.md
 
 Architecture Overview
-	•	Models define Mongoose schemas for Users, Jobs, and Parts Inventory.
-	•	Controllers contain business logic and interact with the models.
-	•	Routes map HTTP endpoints to controllers.
-	•	Next.js frontend communicates with backend through fetch calls.
+	•	Models implement the MongoDB schemas (User, Part, Job, Counter).
+	•	Controllers handle all business logic and database interaction.
+	•	Routes expose backend API endpoints under /api.
+	•	The Next.js frontend communicates exclusively through fetch calls.
 
 ⸻
 
-Data Models
+Database Schema (ERD)
 
-User
+PipeTrack uses four MongoDB collections:
+	•	User — authentication and identity
+	•	Part — inventory items
+	•	Job — jobs and parts used
+	•	Counter — sequence generator for barcodes (supporting model)
 
-Stores authentication and user profile information.
+erDiagram
+  USER ||--o{ JOB : "creates jobs"
+  USER ||--o{ PART : "owns parts"
+  JOB }o--o{ PART : "uses parts"
 
-Typical fields:
-	•	name
-	•	email
-	•	password (hashed)
-	•	timestamps
+  USER {
+    ObjectId _id
+    string username
+    string email
+    string passwordHash
+    number tokenVersion
+    string resetPasswordTokenHash
+    date resetPasswordExpiresAt
+    date createdAt
+    date updatedAt
+  }
 
-Parts Inventory
+  PART {
+    ObjectId _id
+    string name
+    string sku
+    string barcode
+    number quantity
+    number price
+    number restockThreshold
+    date createdAt
+    date updatedAt
+  }
 
-Stores all parts and quantities available to the user.
+  JOB {
+    ObjectId _id
+    string customerName
+    string vanId
+    PartUsage[] partsUsed
+    number totalCost
+    date jobDate
+    date createdAt
+    date updatedAt
+  }
 
-Typical fields:
-	•	item name
-	•	quantity
-	•	cost
-	•	description
-	•	userId (owner of the inventory item)
-	•	timestamps
 
-Jobs
+⸻
 
-Represents a job performed by a technician.
+User Flow
 
-Typical fields:
-	•	title
-	•	description
-	•	date
-	•	userId (technician)
-	•	partsUsed (array of parts references and quantities)
-	•	timestamps
+This flow reflects the live behavior of your Next.js frontend and Express backend.
+
+flowchart LR
+  A[Open PipeTrack] --> B[Login or Register]
+  B --> C[POST /api/auth/login or /api/auth/register]
+  C --> D[Backend validates and sets auth cookie]
+  D --> E[Dashboard (Protected Route)]
+
+  E --> F[View Jobs]
+  E --> G[Create Job]
+  E --> H[Manage Inventory]
+
+  G --> I[Submit JobForm]
+  I --> J[POST /api/jobs]
+  J --> K[Backend creates Job and updates Part quantities]
+
+  H --> L[GET /api/parts]
+  L --> M[Create Update Delete Parts]
+
+  K --> F
+  F --> E
+  H --> E
+
 
 ⸻
 
@@ -105,15 +151,26 @@ npm install
 
 Environment Variables
 
-Backend .env:
+Create environment variables locally and in deployment.
+Do not commit real values to GitHub.
+
+Backend (server/.env)
 
 PORT=5001
-MONGO_URI=your_mongo_uri
+MONGO_URI=your_mongo_connection_string
 JWT_SECRET=your_jwt_secret
 
-Frontend .env.local:
+Frontend (app/.env.local)
 
-NEXT_PUBLIC_API_BASE_URL=https://your-backend-url.onrender.com
+NEXT_PUBLIC_API_BASE_URL=your_backend_url
+
+Example (local development):
+
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5001
+
+Example (deployment):
+
+NEXT_PUBLIC_API_BASE_URL=https://pipetrack-backend.onrender.com
 
 
 ⸻
@@ -124,9 +181,17 @@ Start backend:
 
 npm start
 
+Available at:
+
+http://localhost:5001
+
 Start frontend:
 
 npm run dev
+
+Available at:
+
+http://localhost:3000
 
 
 ⸻
@@ -134,47 +199,52 @@ npm run dev
 Deployment
 
 Backend (Render):
+
 https://pipetrack-backend.onrender.com
 
 Frontend (Vercel or Render):
-capstone-peagqi0j4-kyle-benaides-projects.vercel.app
 
-Ensure the frontend environment variable points to the correct backend URL.
+https://your-frontend-url.vercel.app
+
 
 ⸻
 
-API Endpoints (Summary)
+API Endpoints
 
-Auth
-POST /api/auth/register
-POST /api/auth/login
+Authentication
+	•	POST /api/auth/register
+	•	POST /api/auth/login
+	•	GET /api/auth/me
 
 Parts Inventory
-GET /api/inventory
-POST /api/inventory
-PUT /api/inventory/:id
-DELETE /api/inventory/:id
+	•	GET /api/parts
+	•	POST /api/parts
+	•	PUT /api/parts/:id
+	•	DELETE /api/parts/:id
 
 Jobs
-POST /api/jobs
-GET /api/jobs
-PUT /api/jobs/:id/addItem
+	•	GET /api/jobs
+	•	POST /api/jobs
+	•	PUT /api/jobs/:id/addItem
+
+Barcodes
+	•	GET /api/barcodes/:code (used for lookup)
 
 ⸻
 
 Testing
 
-All endpoints validated using Postman.
-Integration testing available with Jest and Supertest.
+All APIs validated with Postman.
+Integration tests may be added using Jest or Supertest.
 
 ⸻
 
 Future Enhancements
-	•	Barcode scanning
+	•	Barcode scanning for parts
 	•	Low-inventory alerts
-	•	PDF job export
-	•	Role-based permissions
-	•	Offline support
+	•	PDF export for job history
+	•	Role-based access
+	•	Offline mode
 
 ⸻
 
@@ -182,3 +252,4 @@ Author
 
 Kyle Benavides
 Full-Stack Web Developer
+
